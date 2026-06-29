@@ -31,7 +31,7 @@ const fallbackProducts = [
 const productImages = Object.fromEntries(fallbackProducts.map((product) => [product.id, product.image]));
 const categories = ["Todos", "Conjuntos", "Camisetas", "Selecciones", "Clubes"];
 const appVersion = "1.1.1";
-const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:3001/api";
+const apiUrl = import.meta.env.VITE_API_URL || "/api";
 const formatter = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const emptyCheckout = {
   name: "",
