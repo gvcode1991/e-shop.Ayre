@@ -1,4 +1,4 @@
-import { Heart, Home, Menu, Minus, Plus, Search, ShoppingBag, UserRound, X } from "lucide-react";
+import { Edit3, Heart, Home, Menu, Minus, Plus, Save, Search, ShoppingBag, Trash2, UserRound, X } from "lucide-react";
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -42,6 +42,17 @@ const emptyCheckout = {
   payment: "Efectivo",
   notes: "",
 };
+const emptyProductForm = {
+  id: "",
+  name: "",
+  category: "Camisetas",
+  tags: "",
+  description: "",
+  price: "",
+  image: "",
+  badge: "",
+  stock: "",
+};
 
 function useSavedCart() {
   const [cart, setCart] = useState(() => {
@@ -69,41 +80,35 @@ export default function App() {
   const [catalogStatus, setCatalogStatus] = useState({ state: "loading", message: "" });
   const [checkout, setCheckout] = useState(emptyCheckout);
   const [checkoutStatus, setCheckoutStatus] = useState({ state: "idle", message: "" });
+  const [productForm, setProductForm] = useState(emptyProductForm);
+  const [editingProductId, setEditingProductId] = useState("");
+  const [adminStatus, setAdminStatus] = useState({ state: "idle", message: "" });
+
+  async function loadProducts() {
+    try {
+      const response = await fetch(`${apiUrl}/products`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos cargar el catalogo.");
+      }
+
+      const apiProducts = data.products.map((product) => ({
+        ...product,
+        sourceImage: product.image,
+        image: productImages[product.id] || product.image,
+      }));
+
+      setProducts(apiProducts);
+      setCatalogStatus({ state: "ready", message: "Catalogo conectado a la API." });
+    } catch {
+      setProducts(fallbackProducts);
+      setCatalogStatus({ state: "fallback", message: "Mostrando catalogo local. Encende la API para sincronizar productos." });
+    }
+  }
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadProducts() {
-      try {
-        const response = await fetch(`${apiUrl}/products`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.message || "No pudimos cargar el catalogo.");
-        }
-
-        const apiProducts = data.products.map((product) => ({
-          ...product,
-          image: productImages[product.id] || product.image,
-        }));
-
-        if (isMounted) {
-          setProducts(apiProducts);
-          setCatalogStatus({ state: "ready", message: "Catalogo conectado a la API." });
-        }
-      } catch {
-        if (isMounted) {
-          setProducts(fallbackProducts);
-          setCatalogStatus({ state: "fallback", message: "Mostrando catalogo local. Encende la API para sincronizar productos." });
-        }
-      }
-    }
-
     loadProducts();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const cartLines = useMemo(
@@ -147,6 +152,89 @@ export default function App() {
   function updateCheckout(field, value) {
     setCheckoutStatus({ state: "idle", message: "" });
     setCheckout((currentCheckout) => ({ ...currentCheckout, [field]: value }));
+  }
+
+  function updateProductForm(field, value) {
+    setAdminStatus({ state: "idle", message: "" });
+    setProductForm((currentProduct) => ({ ...currentProduct, [field]: value }));
+  }
+
+  function resetProductForm() {
+    setProductForm(emptyProductForm);
+    setEditingProductId("");
+    setAdminStatus({ state: "idle", message: "" });
+  }
+
+  function editProduct(product) {
+    setEditingProductId(product.id);
+    setProductForm({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      tags: (product.tags || []).join(", "),
+      description: product.description,
+      price: String(product.price),
+      image: product.sourceImage || product.image || "",
+      badge: product.badge || "",
+      stock: String(product.stock ?? ""),
+    });
+    document.getElementById("admin")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  async function submitProduct(event) {
+    event.preventDefault();
+    setAdminStatus({ state: "loading", message: editingProductId ? "Actualizando producto..." : "Creando producto..." });
+
+    const payload = {
+      ...productForm,
+      price: Number(productForm.price || 0),
+      stock: Number(productForm.stock || 0),
+      tags: productForm.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+    };
+
+    try {
+      const response = await fetch(`${apiUrl}/products${editingProductId ? `/${editingProductId}` : ""}`, {
+        method: editingProductId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = response.status === 204 ? {} : await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos guardar el producto.");
+      }
+
+      await loadProducts();
+      setProductForm(emptyProductForm);
+      setEditingProductId("");
+      setAdminStatus({ state: "success", message: editingProductId ? "Producto actualizado." : "Producto creado." });
+    } catch (error) {
+      setAdminStatus({ state: "error", message: `${error.message} Revisa que la API este corriendo.` });
+    }
+  }
+
+  async function removeProduct(productId) {
+    const shouldDelete = window.confirm("¿Eliminar este producto del catalogo?");
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setAdminStatus({ state: "loading", message: "Eliminando producto..." });
+
+    try {
+      const response = await fetch(`${apiUrl}/products/${productId}`, { method: "DELETE" });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "No pudimos eliminar el producto.");
+      }
+
+      await loadProducts();
+      setAdminStatus({ state: "success", message: "Producto eliminado." });
+    } catch (error) {
+      setAdminStatus({ state: "error", message: `${error.message} Revisa que la API este corriendo.` });
+    }
   }
 
   async function submitOrder(event) {
@@ -228,6 +316,7 @@ export default function App() {
           <a href="#productos">Conjuntos</a>
           <a href="#coleccion">AyRe</a>
           <a href="#contacto">Contacto</a>
+          <a href="#admin">Admin</a>
         </nav>
       </header>
 
@@ -314,6 +403,90 @@ export default function App() {
                 </div>
               </article>
             )) : <p className="empty-state">No encontramos productos con esos filtros.</p>}
+          </div>
+        </section>
+
+        <section className="admin-section" id="admin">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Gestion</p>
+              <h2>Panel admin</h2>
+              <p className="catalog-note">Alta, baja y modificacion de productos del catalogo.</p>
+            </div>
+            <button className="secondary-admin-button" type="button" onClick={resetProductForm}>Nuevo producto</button>
+          </div>
+
+          <div className="admin-layout">
+            <form className="admin-form" onSubmit={submitProduct}>
+              <h3>{editingProductId ? "Editar producto" : "Agregar producto"}</h3>
+              <div className="admin-grid">
+                <label>
+                  Codigo
+                  <input value={productForm.id} onChange={(event) => updateProductForm("id", event.target.value)} type="text" placeholder="camiseta-argentina-10" disabled={Boolean(editingProductId)} />
+                </label>
+                <label>
+                  Nombre
+                  <input value={productForm.name} onChange={(event) => updateProductForm("name", event.target.value)} type="text" placeholder="Nombre del producto" required />
+                </label>
+                <label>
+                  Categoria
+                  <select value={productForm.category} onChange={(event) => updateProductForm("category", event.target.value)}>
+                    <option>Conjuntos</option>
+                    <option>Camisetas</option>
+                    <option>Selecciones</option>
+                    <option>Clubes</option>
+                  </select>
+                </label>
+                <label>
+                  Etiqueta
+                  <input value={productForm.badge} onChange={(event) => updateProductForm("badge", event.target.value)} type="text" placeholder="Nuevo, Stock, Club..." />
+                </label>
+                <label>
+                  Precio
+                  <input value={productForm.price} onChange={(event) => updateProductForm("price", event.target.value)} type="number" min="0" placeholder="34900" required />
+                </label>
+                <label>
+                  Stock
+                  <input value={productForm.stock} onChange={(event) => updateProductForm("stock", event.target.value)} type="number" min="0" placeholder="10" />
+                </label>
+              </div>
+
+              <label>
+                Tags
+                <input value={productForm.tags} onChange={(event) => updateProductForm("tags", event.target.value)} type="text" placeholder="Argentina, Selecciones, Messi" />
+              </label>
+              <label>
+                Imagen
+                <input value={productForm.image} onChange={(event) => updateProductForm("image", event.target.value)} type="text" placeholder="URL de imagen o /assets/archivo.jpg" />
+              </label>
+              <label>
+                Descripcion
+                <textarea value={productForm.description} onChange={(event) => updateProductForm("description", event.target.value)} rows="3" placeholder="Descripcion corta para el catalogo" required />
+              </label>
+
+              {adminStatus.message && <p className={`checkout-message ${adminStatus.state}`}>{adminStatus.message}</p>}
+
+              <button className="checkout-button" type="submit" disabled={adminStatus.state === "loading"}>
+                <Save size={18} />
+                {editingProductId ? "Guardar cambios" : "Crear producto"}
+              </button>
+            </form>
+
+            <div className="admin-products" aria-live="polite">
+              {products.map((product) => (
+                <article className="admin-product-row" key={`admin-${product.id}`}>
+                  <img src={product.image} alt="" />
+                  <div>
+                    <strong>{product.name}</strong>
+                    <span>{product.category} · {formatter.format(product.price)} · Stock {product.stock ?? 0}</span>
+                  </div>
+                  <div className="admin-actions">
+                    <button type="button" aria-label={`Editar ${product.name}`} onClick={() => editProduct(product)}><Edit3 size={18} /></button>
+                    <button type="button" aria-label={`Eliminar ${product.name}`} onClick={() => removeProduct(product.id)}><Trash2 size={18} /></button>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -436,9 +609,10 @@ export default function App() {
           <a href="#productos" onClick={() => setMenuOpen(false)}>Selecciones <Plus size={19} /></a>
           <a href="#productos" onClick={() => setMenuOpen(false)}>Clubes <Plus size={19} /></a>
           <a href="#productos" onClick={() => setMenuOpen(false)}>Conjuntos deportivos <Plus size={19} /></a>
-          <a href="#coleccion" onClick={() => setMenuOpen(false)}>AyRe</a>
-          <a href="#contacto" onClick={() => setMenuOpen(false)}>Contacto</a>
-        </nav>
+            <a href="#coleccion" onClick={() => setMenuOpen(false)}>AyRe</a>
+            <a href="#contacto" onClick={() => setMenuOpen(false)}>Contacto</a>
+            <a href="#admin" onClick={() => setMenuOpen(false)}>Admin</a>
+          </nav>
 
         <div className="mobile-account">
           <UserRound size={21} />

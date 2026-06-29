@@ -2,8 +2,8 @@ import cors from "cors";
 import express from "express";
 import mongoose from "mongoose";
 
-import { products } from "./data/products.js";
 import { createOrder, listOrders } from "./services/ordersService.js";
+import { createProduct, deleteProduct, getProductById, listProducts, updateProduct } from "./services/productsService.js";
 
 export function createApp() {
   const app = express();
@@ -20,28 +20,67 @@ export function createApp() {
     });
   });
 
-  app.get("/api/products", (request, response) => {
-    const category = String(request.query.category || "").trim().toLowerCase();
-    const query = String(request.query.q || "").trim().toLowerCase();
-
-    const filteredProducts = products.filter((product) => {
-      const matchesCategory = !category || product.category.toLowerCase() === category || product.tags.some((tag) => tag.toLowerCase() === category);
-      const searchableText = [product.name, product.category, product.description, ...product.tags].join(" ").toLowerCase();
-      return matchesCategory && (!query || searchableText.includes(query));
-    });
-
-    response.json({ products: filteredProducts });
+  app.get("/api/products", async (request, response, next) => {
+    try {
+      const products = await listProducts(request.query);
+      response.json({ products });
+    } catch (error) {
+      next(error);
+    }
   });
 
-  app.get("/api/products/:id", (request, response) => {
-    const product = products.find((item) => item.id === request.params.id);
+  app.get("/api/products/:id", async (request, response, next) => {
+    try {
+      const product = await getProductById(request.params.id);
 
-    if (!product) {
-      response.status(404).json({ message: "Producto no encontrado." });
-      return;
+      if (!product) {
+        response.status(404).json({ message: "Producto no encontrado." });
+        return;
+      }
+
+      response.json({ product });
+    } catch (error) {
+      next(error);
     }
+  });
 
-    response.json({ product });
+  app.post("/api/products", async (request, response, next) => {
+    try {
+      const product = await createProduct(request.body);
+      response.status(201).json({ product });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/products/:id", async (request, response, next) => {
+    try {
+      const product = await updateProduct(request.params.id, request.body);
+
+      if (!product) {
+        response.status(404).json({ message: "Producto no encontrado." });
+        return;
+      }
+
+      response.json({ product });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.delete("/api/products/:id", async (request, response, next) => {
+    try {
+      const wasDeleted = await deleteProduct(request.params.id);
+
+      if (!wasDeleted) {
+        response.status(404).json({ message: "Producto no encontrado." });
+        return;
+      }
+
+      response.status(204).send();
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.get("/api/orders", async (_request, response, next) => {
@@ -72,8 +111,8 @@ export function createApp() {
         return;
       }
 
-      const orderItems = items.map((item) => {
-        const product = products.find((candidate) => candidate.id === item.id);
+      const orderItems = await Promise.all(items.map(async (item) => {
+        const product = await getProductById(item.id);
         const quantity = Number(item.quantity || 0);
 
         if (!product || quantity < 1) {
@@ -87,7 +126,7 @@ export function createApp() {
           unitPrice: product.price,
           subtotal: product.price * quantity,
         };
-      });
+      }));
 
       if (orderItems.some((item) => item === null)) {
         response.status(400).json({ message: "Hay productos invalidos en el pedido." });
@@ -123,6 +162,16 @@ export function createApp() {
 
   app.use((error, _request, response, _next) => {
     console.error(error);
+    if (error.code === 11000) {
+      response.status(409).json({ message: "Ya existe un registro con ese codigo." });
+      return;
+    }
+
+    if (error.name === "ValidationError" || error.message.includes("obligatorios") || error.message.includes("Ya existe")) {
+      response.status(400).json({ message: error.message });
+      return;
+    }
+
     response.status(500).json({ message: "Error interno del servidor." });
   });
 
