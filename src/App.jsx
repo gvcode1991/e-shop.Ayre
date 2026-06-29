@@ -29,6 +29,7 @@ const products = [
 ];
 
 const categories = ["Todos", "Conjuntos", "Camisetas", "Selecciones", "Clubes"];
+const carouselProducts = products.slice(0, 8);
 const formatter = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 
 function useSavedCart() {
@@ -136,6 +137,29 @@ export default function App() {
           <div><span>03</span><strong>Compra simple</strong><p>Carrito persistente y estructura lista para futuro checkout.</p></div>
         </section>
 
+        <section className="home-carousel" aria-label="Productos destacados en inicio">
+          <div className="section-heading compact-heading">
+            <div>
+              <p className="eyebrow">Nuevos ingresos</p>
+              <h2>Lo mas buscado</h2>
+            </div>
+            <a className="text-link" href="#productos">Ver todo</a>
+          </div>
+
+          <div className="carousel-track">
+            {carouselProducts.map((product) => (
+              <article className="carousel-card" key={`carousel-${product.id}`}>
+                <img src={product.image} alt={product.name} />
+                <div>
+                  <span>{product.category}</span>
+                  <h3>{product.name}</h3>
+                  <strong>{formatter.format(product.price)}</strong>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="shop-section" id="productos">
           <div className="section-heading">
             <div>
@@ -186,6 +210,13 @@ export default function App() {
           </form>
         </section>
       </main>
+
+      <footer className="site-footer">
+        <a className="footer-brand" href="#inicio" aria-label="AyRe inicio">
+          <img src={logoAyre} alt="AyRe" />
+        </a>
+        <p>Copyright © 2026 AyRe. Todos los derechos reservados.</p>
+      </footer>
 
       <aside className={`cart-panel ${isCartOpen ? "is-open" : ""}`} aria-label="Carrito" aria-hidden={!isCartOpen}>
         <div className="cart-header">
