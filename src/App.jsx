@@ -1,4 +1,5 @@
 import { Menu, Minus, Plus, Search, ShoppingBag, X } from "lucide-react";
+import React from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import logoAyre from "../assets/logo-ayre.jpg";
