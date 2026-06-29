@@ -53,6 +53,12 @@ const emptyProductForm = {
   badge: "",
   stock: "",
 };
+const emptyUserForm = {
+  name: "",
+  email: "",
+  phone: "",
+  acceptsMarketing: true,
+};
 
 function useSavedCart() {
   const [cart, setCart] = useState(() => {
@@ -83,6 +89,16 @@ export default function App() {
   const [productForm, setProductForm] = useState(emptyProductForm);
   const [editingProductId, setEditingProductId] = useState("");
   const [adminStatus, setAdminStatus] = useState({ state: "idle", message: "" });
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
+  const [userForm, setUserForm] = useState(emptyUserForm);
+  const [userAccount, setUserAccount] = useState(null);
+  const [userStatus, setUserStatus] = useState({ state: "idle", message: "" });
+
+  useEffect(() => {
+    const handleNavigation = () => setCurrentPath(window.location.pathname);
+    window.addEventListener("popstate", handleNavigation);
+    return () => window.removeEventListener("popstate", handleNavigation);
+  }, []);
 
   async function loadProducts() {
     try {
@@ -124,11 +140,21 @@ export default function App() {
   const visibleProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return products.filter((product) => {
-      const matchesCategory = category === "Todos" || product.category === category || product.tags.includes(category);
-      const matchesQuery = [product.name, product.category, product.description, ...product.tags].join(" ").toLowerCase().includes(normalizedQuery);
+      const tags = product.tags || [];
+      const normalizedCategory = category.toLowerCase();
+      const matchesCategory = category === "Todos" || product.category.toLowerCase() === normalizedCategory || tags.some((tag) => tag.toLowerCase() === normalizedCategory);
+      const matchesQuery = [product.name, product.category, product.description, ...tags].join(" ").toLowerCase().includes(normalizedQuery);
       return matchesCategory && matchesQuery;
     });
-  }, [category, query]);
+  }, [category, products, query]);
+
+  const selectedProduct = useMemo(() => {
+    const match = currentPath.match(/^\/producto\/([^/]+)/);
+    if (!match) return null;
+    return products.find((product) => product.id === decodeURIComponent(match[1])) || null;
+  }, [currentPath, products]);
+
+  const isAdminRoute = currentPath === "/admin";
 
   function addToCart(productId) {
     setCheckoutStatus({ state: "idle", message: "" });
@@ -140,6 +166,69 @@ export default function App() {
       return [...currentCart, { id: productId, quantity: 1 }];
     });
     setCartOpen(true);
+  }
+
+  function navigateTo(path) {
+    window.history.pushState({}, "", path);
+    setCurrentPath(path);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function updateUserForm(field, value) {
+    setUserStatus({ state: "idle", message: "" });
+    setUserForm((currentUser) => ({ ...currentUser, [field]: value }));
+  }
+
+  async function submitUser(event) {
+    event.preventDefault();
+    setUserStatus({ state: "loading", message: "Guardando cuenta..." });
+
+    try {
+      const response = await fetch(`${apiUrl}/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userForm),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos registrar el usuario.");
+      }
+
+      setUserAccount(data.user);
+      setUserStatus({ state: "success", message: "Cuenta registrada. Ya podes guardar favoritos y compras." });
+    } catch (error) {
+      setUserStatus({ state: "error", message: `${error.message} Revisa que la API este corriendo.` });
+    }
+  }
+
+  async function toggleFavorite(productId) {
+    if (!userAccount?.email) {
+      setUserStatus({ state: "error", message: "Registrate con tu email para guardar favoritos." });
+      navigateTo("/");
+      setTimeout(() => document.getElementById("cuenta")?.scrollIntoView({ behavior: "smooth" }), 100);
+      return;
+    }
+
+    const isFavorite = !(userAccount.favorites || []).includes(productId);
+
+    try {
+      const response = await fetch(`${apiUrl}/users/${encodeURIComponent(userAccount.email)}/favorites/${productId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFavorite }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos actualizar favoritos.");
+      }
+
+      setUserAccount(data.user);
+      setUserStatus({ state: "success", message: isFavorite ? "Producto agregado a favoritos." : "Producto quitado de favoritos." });
+    } catch (error) {
+      setUserStatus({ state: "error", message: error.message });
+    }
   }
 
   function updateQuantity(productId, change) {
@@ -266,6 +355,13 @@ export default function App() {
       setCart([]);
       setCheckout(emptyCheckout);
       setCheckoutStatus({ state: "success", message: `Pedido recibido: ${data.order.id}. Te contactamos para coordinar.` });
+      if (checkout.email && userAccount?.email === checkout.email.toLowerCase()) {
+        const userResponse = await fetch(`${apiUrl}/users/${encodeURIComponent(userAccount.email)}`);
+        if (userResponse.ok) {
+          const userData = await userResponse.json();
+          setUserAccount(userData.user);
+        }
+      }
     } catch (error) {
       setCheckoutStatus({ state: "error", message: `${error.message} Revisa que la API este corriendo.` });
     }
@@ -284,7 +380,7 @@ export default function App() {
             <Menu size={25} />
           </button>
 
-          <a className="brand" href="#inicio" aria-label="AyRe inicio">
+          <a className="brand" href="/" aria-label="AyRe inicio" onClick={(event) => { event.preventDefault(); navigateTo("/"); }}>
             <img src={logoAyre} alt="AyRe" />
           </a>
 
@@ -294,8 +390,8 @@ export default function App() {
           </label>
 
           <div className="header-actions" aria-label="Accesos rapidos">
-            <a href="#productos" aria-label="Favoritos"><Heart size={24} /><span>Favoritos</span></a>
-            <a href="#contacto" aria-label="Mi cuenta"><UserRound size={23} /><span>Mi cuenta</span></a>
+            <a href="#cuenta" aria-label="Favoritos"><Heart size={24} /><span>Favoritos</span></a>
+            <a href="#cuenta" aria-label="Mi cuenta"><UserRound size={23} /><span>Mi cuenta</span></a>
             <a href="#contacto" aria-label="Tiendas"><Home size={23} /><span>Tiendas</span></a>
             <button className="header-cart" type="button" aria-label="Abrir carrito" onClick={() => setCartOpen(true)}>
               <ShoppingBag size={24} />
@@ -316,11 +412,13 @@ export default function App() {
           <a href="#productos">Conjuntos</a>
           <a href="#coleccion">AyRe</a>
           <a href="#contacto">Contacto</a>
-          <a href="#admin">Admin</a>
+          <a href="/admin" target="_blank" rel="noreferrer">Admin</a>
         </nav>
       </header>
 
-      <main id="inicio">
+      <main id={isAdminRoute ? "admin" : "inicio"}>
+        {!isAdminRoute && (
+          <>
         <section className="hero" style={{ "--hero-image": `url(${heroImage})` }}>
           <div className="hero-copy">
             <p className="eyebrow">Mundial style drops</p>
@@ -336,6 +434,28 @@ export default function App() {
         <section className="shipping-band" aria-label="Beneficio de envio">
           <span>Envios gratis desde $60.000</span>
         </section>
+
+        {selectedProduct && (
+          <section className="product-detail" aria-label={`Detalle de ${selectedProduct.name}`}>
+            <button className="text-link detail-back" type="button" onClick={() => navigateTo("/")}>Volver al catalogo</button>
+            <div className="product-detail-layout">
+              <img src={selectedProduct.image} alt={selectedProduct.name} />
+              <div>
+                <p className="eyebrow">{selectedProduct.category}</p>
+                <h2>{selectedProduct.name}</h2>
+                <p>{selectedProduct.description}</p>
+                <strong className="detail-price">{formatter.format(selectedProduct.price)}</strong>
+                <div className="detail-actions">
+                  <button className="primary-action" type="button" onClick={() => addToCart(selectedProduct.id)}>Agregar al carrito</button>
+                  <button className="favorite-button" type="button" onClick={() => toggleFavorite(selectedProduct.id)}>
+                    <Heart size={18} />
+                    {(userAccount?.favorites || []).includes(selectedProduct.id) ? "Guardado" : "Favorito"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="intro-band" id="coleccion" aria-label="Valores de AyRe">
           <div><span>01</span><strong>Clubes y selecciones</strong><p>Modelos elegidos para chicos, entrenamiento y uso urbano.</p></div>
@@ -354,7 +474,7 @@ export default function App() {
 
           <div className="carousel-track">
             {carouselProducts.map((product) => (
-              <article className="carousel-card" key={`carousel-${product.id}`}>
+              <article className="carousel-card" key={`carousel-${product.id}`} role="button" tabIndex={0} onClick={() => navigateTo(`/producto/${product.id}`)} onKeyDown={(event) => { if (event.key === "Enter") navigateTo(`/producto/${product.id}`); }}>
                 <img src={product.image} alt={product.name} />
                 <div>
                   <span>{product.category}</span>
@@ -390,22 +510,30 @@ export default function App() {
           <div className="product-grid" aria-live="polite">
             {visibleProducts.length ? visibleProducts.map((product) => (
               <article className="product-card" key={product.id}>
-                <div className="product-media">
+                <div className="product-media" role="button" tabIndex={0} onClick={() => navigateTo(`/producto/${product.id}`)} onKeyDown={(event) => { if (event.key === "Enter") navigateTo(`/producto/${product.id}`); }}>
                   <img src={product.image} alt={product.name} loading="lazy" />
                   <span>{product.badge}</span>
                 </div>
                 <div className="product-info">
-                  <div className="product-meta">
+                  <div className="product-meta" role="button" tabIndex={0} onClick={() => navigateTo(`/producto/${product.id}`)} onKeyDown={(event) => { if (event.key === "Enter") navigateTo(`/producto/${product.id}`); }}>
                     <div><h3>{product.name}</h3><p>{product.description}</p></div>
                     <span className="price">{formatter.format(product.price)}</span>
                   </div>
-                  <button className="add-button" type="button" onClick={() => addToCart(product.id)}>Agregar</button>
+                  <div className="product-actions">
+                    <button className="add-button" type="button" onClick={() => addToCart(product.id)}>Agregar</button>
+                    <button className="favorite-icon-button" type="button" aria-label={`Guardar ${product.name}`} onClick={() => toggleFavorite(product.id)}>
+                      <Heart size={18} fill={(userAccount?.favorites || []).includes(product.id) ? "currentColor" : "none"} />
+                    </button>
+                  </div>
                 </div>
               </article>
             )) : <p className="empty-state">No encontramos productos con esos filtros.</p>}
           </div>
         </section>
+          </>
+        )}
 
+        {isAdminRoute && (
         <section className="admin-section" id="admin">
           <div className="section-heading">
             <div>
@@ -489,6 +617,37 @@ export default function App() {
             </div>
           </div>
         </section>
+        )}
+
+        {!isAdminRoute && (
+          <>
+        <section className="account-section" id="cuenta">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Cuenta</p>
+              <h2>Registro de usuarios</h2>
+              <p className="catalog-note">Registrate para recibir novedades, guardar favoritos y asociar tus compras a tu email.</p>
+            </div>
+          </div>
+          <div className="account-layout">
+            <form className="admin-form" onSubmit={submitUser}>
+              <div className="admin-grid">
+                <label>Nombre<input value={userForm.name} onChange={(event) => updateUserForm("name", event.target.value)} type="text" required /></label>
+                <label>Email<input value={userForm.email} onChange={(event) => updateUserForm("email", event.target.value)} type="email" required /></label>
+                <label>Telefono<input value={userForm.phone} onChange={(event) => updateUserForm("phone", event.target.value)} type="tel" /></label>
+                <label className="checkbox-label"><input checked={userForm.acceptsMarketing} onChange={(event) => updateUserForm("acceptsMarketing", event.target.checked)} type="checkbox" /> Recibir novedades por email</label>
+              </div>
+              {userStatus.message && <p className={`checkout-message ${userStatus.state}`}>{userStatus.message}</p>}
+              <button className="checkout-button" type="submit">Crear / actualizar cuenta</button>
+            </form>
+            <div className="account-summary">
+              <h3>{userAccount ? userAccount.name : "Tus datos"}</h3>
+              <p>{userAccount ? userAccount.email : "Cuando te registres, tus favoritos y compras quedaran asociados a tu email."}</p>
+              <strong>Favoritos: {(userAccount?.favorites || []).length}</strong>
+              <strong>Compras: {(userAccount?.purchases || []).length}</strong>
+            </div>
+          </div>
+        </section>
 
         <section className="contact-band" id="contacto">
           <div>
@@ -500,6 +659,8 @@ export default function App() {
             <button type="submit">Sumarme</button>
           </form>
         </section>
+          </>
+        )}
       </main>
 
       <footer className="site-footer">
@@ -611,7 +772,7 @@ export default function App() {
           <a href="#productos" onClick={() => setMenuOpen(false)}>Conjuntos deportivos <Plus size={19} /></a>
             <a href="#coleccion" onClick={() => setMenuOpen(false)}>AyRe</a>
             <a href="#contacto" onClick={() => setMenuOpen(false)}>Contacto</a>
-            <a href="#admin" onClick={() => setMenuOpen(false)}>Admin</a>
+            <a href="/admin" target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)}>Admin</a>
           </nav>
 
         <div className="mobile-account">

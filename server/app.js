@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { createOrder, listOrders } from "./services/ordersService.js";
 import { createProduct, deleteProduct, getProductById, listProducts, updateProduct } from "./services/productsService.js";
+import { attachPurchaseToUser, getUserByEmail, registerUser, setFavorite } from "./services/usersService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -98,6 +99,45 @@ export function createApp() {
     }
   });
 
+  app.post("/api/users", async (request, response, next) => {
+    try {
+      const user = await registerUser(request.body);
+      response.status(201).json({ user });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/users/:email", async (request, response, next) => {
+    try {
+      const user = await getUserByEmail(request.params.email);
+
+      if (!user) {
+        response.status(404).json({ message: "Usuario no encontrado." });
+        return;
+      }
+
+      response.json({ user });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.put("/api/users/:email/favorites/:productId", async (request, response, next) => {
+    try {
+      const user = await setFavorite(request.params.email, request.params.productId, Boolean(request.body.isFavorite));
+
+      if (!user) {
+        response.status(404).json({ message: "Registrate para guardar favoritos." });
+        return;
+      }
+
+      response.json({ user });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.post("/api/orders", async (request, response, next) => {
     try {
       const { customer, items } = request.body;
@@ -155,6 +195,10 @@ export function createApp() {
         items: orderItems,
         total,
       });
+
+      if (customer.email && result.order?.id) {
+        await attachPurchaseToUser(customer.email, result.order.id);
+      }
 
       response.status(201).json(result);
     } catch (error) {
