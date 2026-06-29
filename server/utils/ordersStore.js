@@ -1,10 +1,10 @@
 const orders = [];
 
-export function listOrders() {
+export function listMemoryOrders() {
   return orders;
 }
 
-export function createOrder(orderData) {
+export function createMemoryOrder(orderData) {
   const order = {
     id: `order-${Date.now()}`,
     status: "pending",
