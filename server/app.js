@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import mongoose from "mongoose";
 
 import { products } from "./data/products.js";
 import { createOrder, listOrders } from "./services/ordersService.js";
@@ -11,7 +12,12 @@ export function createApp() {
   app.use(express.json());
 
   app.get("/api/health", (_request, response) => {
-    response.json({ ok: true, service: "ayre-api" });
+    response.json({
+      ok: true,
+      service: "ayre-api",
+      mongoConfigured: Boolean(process.env.MONGODB_URI),
+      mongoState: mongoose.connection.readyState,
+    });
   });
 
   app.get("/api/products", (request, response) => {

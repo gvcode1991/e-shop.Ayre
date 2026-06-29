@@ -1,6 +1,16 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 
-import { createApp } from "./app.js";
+const env = dotenv.config();
+
+if (env.parsed?.MONGODB_URI) {
+  process.env.MONGODB_URI = env.parsed.MONGODB_URI;
+}
+
+if (env.parsed?.MONGODB_DB_NAME) {
+  process.env.MONGODB_DB_NAME = env.parsed.MONGODB_DB_NAME;
+}
+
+const { createApp } = await import("./app.js");
 
 const port = Number(process.env.PORT || 3001);
 const app = createApp();

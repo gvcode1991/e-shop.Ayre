@@ -18,6 +18,7 @@ export async function connectToDatabase() {
   if (!connectionPromise) {
     connectionPromise = mongoose.connect(process.env.MONGODB_URI, {
       dbName: process.env.MONGODB_DB_NAME || "ayre-shop",
+      serverSelectionTimeoutMS: 15000,
     });
   }
 
