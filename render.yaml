@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ayre-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_ORIGIN
+        value: http://127.0.0.1:5173
+      - key: MONGODB_DB_NAME
+        value: ayre-shop
+      - key: MONGODB_URI
+        sync: false

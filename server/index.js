@@ -13,8 +13,9 @@ if (env.parsed?.MONGODB_DB_NAME) {
 const { createApp } = await import("./app.js");
 
 const port = Number(process.env.PORT || 3001);
+const host = process.env.HOST || "0.0.0.0";
 const app = createApp();
 
-app.listen(port, () => {
-  console.log(`AyRe API escuchando en http://127.0.0.1:${port}`);
+app.listen(port, host, () => {
+  console.log(`AyRe API escuchando en http://${host}:${port}`);
 });
