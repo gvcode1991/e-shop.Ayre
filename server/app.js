@@ -8,7 +8,8 @@ import { fileURLToPath } from "node:url";
 import { createOrder, listOrders } from "./services/ordersService.js";
 import { createProduct, deleteProduct, getProductById, listProducts, updateProduct } from "./services/productsService.js";
 import { uploadProductImage } from "./services/cloudinaryService.js";
-import { attachPurchaseToUser, getUserByEmail, registerUser, setFavorite } from "./services/usersService.js";
+import { sendAccountConfirmationEmail, isEmailConfigured } from "./services/emailService.js";
+import { attachPurchaseToUser, confirmUserEmail, getUserByEmail, isVerifiedUserEmail, registerUser, setFavorite, updateUserPreferences } from "./services/usersService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +41,7 @@ export function createApp() {
       service: "ayre-api",
       mongoConfigured: Boolean(process.env.MONGODB_URI),
       cloudinaryConfigured: Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET),
+      emailConfigured: isEmailConfigured(),
       mongoState: mongoose.connection.readyState,
     });
   });
@@ -128,7 +130,32 @@ export function createApp() {
   app.post("/api/users", async (request, response, next) => {
     try {
       const user = await registerUser(request.body);
-      response.status(201).json({ user });
+      const email = await sendAccountConfirmationEmail(user, user.confirmationToken);
+      const { confirmationToken, ...publicUser } = user;
+      response.status(201).json({ user: publicUser, email });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/users/confirm/:token", async (request, response, next) => {
+    try {
+      const user = await confirmUserEmail(request.params.token);
+
+      if (!user) {
+        response.status(404).send("El enlace de confirmacion no es valido o ya fue utilizado.");
+        return;
+      }
+
+      response.send(`
+        <main style="font-family:Arial,sans-serif;min-height:100vh;display:grid;place-items:center;background:#fbf7f2;color:#241913">
+          <section style="max-width:520px;padding:32px;border:1px solid #eaded2;background:white;border-radius:8px;text-align:center">
+            <h1>Cuenta activada</h1>
+            <p>Tu email ${user.email} ya esta confirmado. Ya podes comprar en AyRe.</p>
+            <a href="/" style="display:inline-block;margin-top:16px;padding:12px 18px;border-radius:999px;background:#9b7350;color:white;text-decoration:none">Volver a la tienda</a>
+          </section>
+        </main>
+      `);
     } catch (error) {
       next(error);
     }
@@ -164,6 +191,21 @@ export function createApp() {
     }
   });
 
+  app.put("/api/users/:email/preferences", async (request, response, next) => {
+    try {
+      const user = await updateUserPreferences(request.params.email, request.body);
+
+      if (!user) {
+        response.status(404).json({ message: "Usuario no encontrado." });
+        return;
+      }
+
+      response.json({ user });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.post("/api/orders", async (request, response, next) => {
     try {
       const { customer, items } = request.body;
@@ -173,8 +215,14 @@ export function createApp() {
         return;
       }
 
-      if (!customer?.name || !customer?.phone) {
-        response.status(400).json({ message: "Necesitamos nombre y telefono para crear el pedido." });
+      if (!customer?.name || !customer?.phone || !customer?.email) {
+        response.status(400).json({ message: "Necesitamos nombre, telefono y email registrado para crear el pedido." });
+        return;
+      }
+
+      const isVerified = await isVerifiedUserEmail(customer.email);
+      if (!isVerified) {
+        response.status(403).json({ message: "Activa tu cuenta desde el email de confirmacion antes de comprar." });
         return;
       }
 

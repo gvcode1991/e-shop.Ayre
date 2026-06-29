@@ -30,7 +30,7 @@ const fallbackProducts = [
 
 const productImages = Object.fromEntries(fallbackProducts.map((product) => [product.id, product.image]));
 const categories = ["Todos", "Conjuntos", "Camisetas", "Selecciones", "Clubes", "Accesorios"];
-const appVersion = "1.4.1";
+const appVersion = "1.5.0";
 const apiUrl = import.meta.env.VITE_API_URL || "/api";
 const formatter = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const availableSizes = ["4", "6", "8", "10", "12", "14", "S", "M", "L", "XL"];
@@ -66,6 +66,9 @@ const emptyUserForm = {
   phone: "",
   acceptsMarketing: true,
 };
+const emptyAccountLookup = {
+  email: "",
+};
 
 function useSavedCart() {
   const [cart, setCart] = useState(() => {
@@ -92,6 +95,7 @@ export default function App() {
   const [products, setProducts] = useState(fallbackProducts);
   const [catalogStatus, setCatalogStatus] = useState({ state: "loading", message: "" });
   const [checkout, setCheckout] = useState(emptyCheckout);
+  const [checkoutStep, setCheckoutStep] = useState(1);
   const [checkoutStatus, setCheckoutStatus] = useState({ state: "idle", message: "" });
   const [productForm, setProductForm] = useState(emptyProductForm);
   const [editingProductId, setEditingProductId] = useState("");
@@ -99,6 +103,7 @@ export default function App() {
   const [imageUpload, setImageUpload] = useState({ file: null, preview: "", status: "idle", message: "" });
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
   const [userForm, setUserForm] = useState(emptyUserForm);
+  const [accountLookup, setAccountLookup] = useState(emptyAccountLookup);
   const [userAccount, setUserAccount] = useState(null);
   const [userStatus, setUserStatus] = useState({ state: "idle", message: "" });
 
@@ -183,6 +188,7 @@ export default function App() {
 
   const isAdminRoute = currentPath === "/admin";
   const isRegisterRoute = currentPath === "/registro";
+  const isAccountRoute = currentPath === "/cuenta";
 
   useEffect(() => {
     document.body.classList.toggle("has-open-layer", isCartOpen || isMenuOpen);
@@ -199,6 +205,13 @@ export default function App() {
       return [...currentCart, { id: productId, quantity: 1, size: "" }];
     });
     setCartOpen(true);
+    setCheckoutStep(1);
+  }
+
+  function clearCart() {
+    setCart([]);
+    setCheckoutStatus({ state: "idle", message: "" });
+    setCheckoutStep(1);
   }
 
   function updateCartSize(productId, size) {
@@ -234,6 +247,11 @@ export default function App() {
     setUserForm((currentUser) => ({ ...currentUser, [field]: value }));
   }
 
+  function updateAccountLookup(field, value) {
+    setUserStatus({ state: "idle", message: "" });
+    setAccountLookup((currentLookup) => ({ ...currentLookup, [field]: value }));
+  }
+
   async function submitUser(event) {
     event.preventDefault();
     setUserStatus({ state: "loading", message: "Guardando cuenta..." });
@@ -251,9 +269,65 @@ export default function App() {
       }
 
       setUserAccount(data.user);
-      setUserStatus({ state: "success", message: "Cuenta registrada. Ya podes guardar favoritos y compras." });
+      setAccountLookup({ email: data.user.email });
+      setUserStatus({
+        state: data.email?.sent ? "success" : "loading",
+        message: data.email?.sent
+          ? "Te enviamos un email para activar tu cuenta antes de comprar."
+          : "Cuenta creada. Falta configurar SMTP para enviar el email de activacion.",
+      });
     } catch (error) {
       setUserStatus({ state: "error", message: `${error.message} Revisa que la API este corriendo.` });
+    }
+  }
+
+  async function loadAccount(event) {
+    event.preventDefault();
+    setUserStatus({ state: "loading", message: "Buscando cuenta..." });
+
+    try {
+      const response = await fetch(`${apiUrl}/users/${encodeURIComponent(accountLookup.email)}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "No encontramos esa cuenta.");
+      }
+
+      setUserAccount(data.user);
+      setUserForm({
+        name: data.user.name || "",
+        email: data.user.email || "",
+        phone: data.user.phone || "",
+        acceptsMarketing: Boolean(data.user.acceptsMarketing),
+      });
+      setCheckout((currentCheckout) => ({ ...currentCheckout, email: data.user.email || currentCheckout.email }));
+      setUserStatus({ state: "success", message: data.user.emailVerified ? "Cuenta activa." : "Cuenta pendiente de confirmacion por email." });
+    } catch (error) {
+      setUserStatus({ state: "error", message: error.message });
+    }
+  }
+
+  async function saveAccountPreferences(acceptsMarketing) {
+    if (!userAccount?.email) return;
+
+    setUserStatus({ state: "loading", message: "Guardando preferencias..." });
+
+    try {
+      const response = await fetch(`${apiUrl}/users/${encodeURIComponent(userAccount.email)}/preferences`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ acceptsMarketing }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos guardar las preferencias.");
+      }
+
+      setUserAccount(data.user);
+      setUserStatus({ state: "success", message: "Preferencias guardadas." });
+    } catch (error) {
+      setUserStatus({ state: "error", message: error.message });
     }
   }
 
@@ -457,13 +531,30 @@ export default function App() {
       return;
     }
 
-    if (checkout.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkout.email)) {
+    if (checkoutStep === 1) {
+      setCheckoutStatus({ state: "idle", message: "" });
+      setCheckoutStep(2);
+      return;
+    }
+
+    if (!checkout.name || !checkout.phone || !checkout.email) {
+      setCheckoutStatus({ state: "error", message: "Completa nombre, telefono y email registrado." });
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkout.email)) {
       setCheckoutStatus({ state: "error", message: "Revisa el email para poder enviarte la confirmacion." });
       return;
     }
 
     if (!/^[0-9\s()+-]{8,}$/.test(checkout.phone)) {
       setCheckoutStatus({ state: "error", message: "Revisa el telefono o WhatsApp. Necesitamos al menos 8 numeros." });
+      return;
+    }
+
+    if (checkoutStep === 2) {
+      setCheckoutStatus({ state: "idle", message: "" });
+      setCheckoutStep(3);
       return;
     }
 
@@ -543,8 +634,8 @@ export default function App() {
           </label>
 
           <div className="header-actions" aria-label="Accesos rapidos">
-            <a href="/registro" aria-label="Favoritos" onClick={(event) => { event.preventDefault(); navigateTo("/registro"); }}><Heart size={24} /><span>Favoritos</span></a>
-            <a href="/registro" aria-label="Mi cuenta" onClick={(event) => { event.preventDefault(); navigateTo("/registro"); }}><UserRound size={23} /><span>Mi cuenta</span></a>
+            <a href="/cuenta" aria-label="Favoritos" onClick={(event) => { event.preventDefault(); navigateTo("/cuenta"); }}><Heart size={24} /><span>Favoritos</span></a>
+            <a href="/cuenta" aria-label="Mi cuenta" onClick={(event) => { event.preventDefault(); navigateTo("/cuenta"); }}><UserRound size={23} /><span>Mi cuenta</span></a>
             <a href="#contacto" aria-label="Tiendas"><Home size={23} /><span>Tiendas</span></a>
             <button className="header-cart" type="button" aria-label="Abrir carrito" onClick={() => setCartOpen(true)}>
               <ShoppingBag size={24} />
@@ -569,8 +660,8 @@ export default function App() {
         </nav>
       </header>
 
-      <main id={isAdminRoute ? "admin" : isRegisterRoute ? "registro" : "inicio"}>
-        {!isAdminRoute && !isRegisterRoute && (
+      <main id={isAdminRoute ? "admin" : isRegisterRoute ? "registro" : isAccountRoute ? "cuenta" : "inicio"}>
+        {!isAdminRoute && !isRegisterRoute && !isAccountRoute && (
           <>
         <section className="hero" style={{ "--hero-image": `url(${heroImage})` }}>
           <div className="hero-copy">
@@ -808,8 +899,8 @@ export default function App() {
           <div className="section-heading">
             <div>
               <p className="eyebrow">Cuenta</p>
-              <h2>Registro de usuarios</h2>
-              <p className="catalog-note">Registrate para recibir novedades, guardar favoritos y asociar tus compras a tu email.</p>
+              <h2>Crear cuenta</h2>
+              <p className="catalog-note">Registrate para recibir el email de activacion. Necesitas activar la cuenta antes de comprar.</p>
             </div>
           </div>
           <div className="account-layout">
@@ -821,19 +912,58 @@ export default function App() {
                 <label className="checkbox-label"><input checked={userForm.acceptsMarketing} onChange={(event) => updateUserForm("acceptsMarketing", event.target.checked)} type="checkbox" /> Recibir novedades por email</label>
               </div>
               {userStatus.message && <p className={`checkout-message ${userStatus.state}`}>{userStatus.message}</p>}
-              <button className="checkout-button" type="submit">Crear / actualizar cuenta</button>
+              <button className="checkout-button" type="submit">Crear cuenta y enviar confirmacion</button>
             </form>
             <div className="account-summary">
-              <h3>{userAccount ? userAccount.name : "Tus datos"}</h3>
-              <p>{userAccount ? userAccount.email : "Cuando te registres, tus favoritos y compras quedaran asociados a tu email."}</p>
-              <strong>Favoritos: {(userAccount?.favorites || []).length}</strong>
-              <strong>Compras: {(userAccount?.purchases || []).length}</strong>
+              <h3>{userAccount ? userAccount.name : "Activacion por email"}</h3>
+              <p>{userAccount ? userAccount.email : "Despues de registrarte, abri el email de AyRe y confirma tu cuenta para habilitar compras."}</p>
+              <strong>{userAccount?.emailVerified ? "Cuenta activa" : "Pendiente de activacion"}</strong>
             </div>
           </div>
         </section>
         )}
 
-        {!isAdminRoute && !isRegisterRoute && (
+        {isAccountRoute && (
+        <section className="account-section" id="cuenta-admin">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Mi cuenta</p>
+              <h2>Administracion de cuenta</h2>
+              <p className="catalog-note">Consulta tu cuenta, preferencias, favoritos y compras asociadas a tu email.</p>
+            </div>
+          </div>
+          <div className="account-layout">
+            <form className="admin-form" onSubmit={loadAccount}>
+              <h3>Buscar cuenta</h3>
+              <label>Email registrado<input value={accountLookup.email} onChange={(event) => updateAccountLookup("email", event.target.value)} type="email" required /></label>
+              <button className="checkout-button" type="submit">Ver mi cuenta</button>
+              {userStatus.message && <p className={`checkout-message ${userStatus.state}`}>{userStatus.message}</p>}
+            </form>
+            <div className="account-summary">
+              <h3>{userAccount ? userAccount.email : "Cuenta"}</h3>
+              <p>{userAccount ? `Estado: ${userAccount.emailVerified ? "activa" : "pendiente de confirmacion"}` : "Ingresa tu email para ver tus compras y preferencias."}</p>
+              {userAccount && (
+                <>
+                  <label className="checkbox-label account-check"><input checked={Boolean(userAccount.acceptsMarketing)} onChange={(event) => saveAccountPreferences(event.target.checked)} type="checkbox" /> Recibir notificaciones al mail</label>
+                  <strong>Favoritos: {(userAccount.favorites || []).length}</strong>
+                  <strong>Compras realizadas: {(userAccount.purchases || []).length}</strong>
+                  <div className="purchase-list">
+                    {(userAccount.purchases || []).map((purchase) => (
+                      <article key={purchase.id || purchase._id || purchase.createdAt}>
+                        <span>{purchase.createdAt ? new Date(purchase.createdAt).toLocaleDateString("es-AR") : "Compra"}</span>
+                        <strong>{formatter.format(purchase.total || 0)}</strong>
+                        <small>{purchase.status || "pending"}</small>
+                      </article>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+        )}
+
+        {!isAdminRoute && !isRegisterRoute && !isAccountRoute && (
         <section className="contact-band" id="contacto">
           <div>
             <p className="eyebrow">AyRe team</p>
@@ -860,31 +990,121 @@ export default function App() {
           <div><p className="eyebrow">Compra</p><h2>Carrito</h2></div>
           <button className="icon-action close-cart" type="button" aria-label="Cerrar carrito" onClick={() => setCartOpen(false)}><X size={26} /></button>
         </div>
+        <div className="checkout-steps" aria-label="Pasos de compra">
+          <button type="button" className={checkoutStep === 1 ? "is-active" : ""} onClick={() => setCheckoutStep(1)}>1. Productos</button>
+          <button type="button" className={checkoutStep === 2 ? "is-active" : ""} onClick={() => cartLines.length && setCheckoutStep(2)}>2. Datos</button>
+          <button type="button" className={checkoutStep === 3 ? "is-active" : ""} onClick={() => cartLines.length && setCheckoutStep(3)}>3. Confirmar</button>
+        </div>
         <div className="cart-items">
-          {cartLines.length ? cartLines.map((item) => (
-            <article className="cart-line" key={item.id}>
-              <img src={item.image} alt="" />
-              <div>
-                <h3>{item.name}</h3>
-                <p>{formatter.format(item.price)} x {item.quantity}</p>
-                <label className="line-size">
-                  Talle
-                  <select value={item.size} onChange={(event) => updateCartSize(item.id, event.target.value)} required>
-                    <option value="">Elegir</option>
-                    {availableSizes.map((size) => <option value={size} key={`${item.id}-${size}`}>{size}</option>)}
+          {checkoutStep === 1 && (
+            <>
+              {cartLines.length ? cartLines.map((item) => (
+                <article className="cart-line" key={item.id}>
+                  <img src={item.image} alt="" />
+                  <div>
+                    <h3>{item.name}</h3>
+                    <p>{formatter.format(item.price)} x {item.quantity}</p>
+                    <label className="line-size">
+                      Talle
+                      <select value={item.size} onChange={(event) => updateCartSize(item.id, event.target.value)} required>
+                        <option value="">Elegir</option>
+                        {availableSizes.map((size) => <option value={size} key={`${item.id}-${size}`}>{size}</option>)}
+                      </select>
+                    </label>
+                    <div className="qty-controls" aria-label={`Cantidad de ${item.name}`}>
+                      <button type="button" onClick={() => updateQuantity(item.id, -1)} aria-label="Restar"><Minus size={16} /></button>
+                      <strong>{item.quantity}</strong>
+                      <button type="button" onClick={() => updateQuantity(item.id, 1)} aria-label="Sumar"><Plus size={16} /></button>
+                    </div>
+                  </div>
+                  <strong>{formatter.format(item.price * item.quantity)}</strong>
+                </article>
+              )) : <p className="empty-state">Tu carrito esta vacio.</p>}
+              {cartLines.length > 0 && <button className="clear-cart-button" type="button" onClick={clearCart}>Vaciar carrito</button>}
+            </>
+          )}
+
+          {checkoutStep === 2 && (
+            <form className="checkout-form staged-form" onSubmit={submitOrder}>
+              <div className="checkout-grid">
+                <label>
+                  Nombre
+                  <input value={checkout.name} onChange={(event) => updateCheckout("name", event.target.value)} type="text" placeholder="Nombre y apellido" required />
+                </label>
+                <label>
+                  Telefono
+                  <input value={checkout.phone} onChange={(event) => updateCheckout("phone", event.target.value)} type="tel" placeholder="WhatsApp" required />
+                </label>
+                <label>
+                  Email registrado
+                  <input value={checkout.email} onChange={(event) => updateCheckout("email", event.target.value)} type="email" placeholder="tu@email.com" required />
+                </label>
+                <label>
+                  Entrega
+                  <select value={checkout.delivery} onChange={(event) => updateCheckout("delivery", event.target.value)}>
+                    <option>Retiro en tienda</option>
+                    <option>Envio a domicilio</option>
+                    <option>Coordinar por WhatsApp</option>
                   </select>
                 </label>
-                <div className="qty-controls" aria-label={`Cantidad de ${item.name}`}>
-                  <button type="button" onClick={() => updateQuantity(item.id, -1)} aria-label="Restar"><Minus size={16} /></button>
-                  <strong>{item.quantity}</strong>
-                  <button type="button" onClick={() => updateQuantity(item.id, 1)} aria-label="Sumar"><Plus size={16} /></button>
-                </div>
               </div>
-              <strong>{formatter.format(item.price * item.quantity)}</strong>
-            </article>
-          )) : <p className="empty-state">Tu carrito esta vacio.</p>}
+
+              {checkout.delivery === "Envio a domicilio" && (
+                <label>
+                  Direccion
+                  <input value={checkout.address} onChange={(event) => updateCheckout("address", event.target.value)} type="text" placeholder="Calle, numero, localidad" required />
+                </label>
+              )}
+
+              <label>
+                Pago
+                <select value={checkout.payment} onChange={(event) => updateCheckout("payment", event.target.value)}>
+                  <option>Efectivo</option>
+                  <option>Transferencia</option>
+                  <option>Mercado Pago</option>
+                  <option>Coordinar</option>
+                </select>
+              </label>
+              <p className="payment-help">
+                {checkout.payment === "Transferencia" && "Al confirmar, guardamos el pedido y te pasamos los datos de transferencia por WhatsApp."}
+                {checkout.payment === "Mercado Pago" && "Dejamos el pedido reservado y te enviamos el link de Mercado Pago para completar el pago."}
+                {checkout.payment === "Efectivo" && "Pagas al retirar o al coordinar la entrega."}
+                {checkout.payment === "Coordinar" && "Te contactamos para elegir el metodo de pago mas comodo."}
+              </p>
+
+              <label className="checkbox-label checkout-check">
+                <input checked={checkout.notifyByEmail} onChange={(event) => updateCheckout("notifyByEmail", event.target.checked)} type="checkbox" />
+                Enviarme confirmacion y novedades al email
+              </label>
+
+              <label>
+                Comentarios
+                <textarea value={checkout.notes} onChange={(event) => updateCheckout("notes", event.target.value)} placeholder="Nombre en camiseta, colores o cualquier detalle del pedido" rows="3" />
+              </label>
+            </form>
+          )}
+
+          {checkoutStep === 3 && (
+            <div className="order-review">
+              <h3>Revisar pedido</h3>
+              {cartLines.map((item) => (
+                <div className="review-line" key={`review-${item.id}`}>
+                  <span>{item.name} - talle {item.size || "sin talle"} x{item.quantity}</span>
+                  <strong>{formatter.format(item.price * item.quantity)}</strong>
+                </div>
+              ))}
+              <div className="review-customer">
+                <span>{checkout.name}</span>
+                <span>{checkout.phone}</span>
+                <span>{checkout.email}</span>
+                <span>{checkout.delivery}{checkout.address ? ` - ${checkout.address}` : ""}</span>
+                <span>{checkout.payment}</span>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="cart-footer">
+
+        <form className="cart-footer" onSubmit={submitOrder}>
           <div className="checkout-summary" aria-label="Resumen de compra">
             <div><span>Subtotal</span><strong>{formatter.format(cartSubtotal)}</strong></div>
             <div><span>Envio</span><strong>{currentShippingCost ? formatter.format(currentShippingCost) : "Sin cargo"}</strong></div>
@@ -893,72 +1113,17 @@ export default function App() {
               <p>Te faltan {formatter.format(freeShippingThreshold - cartSubtotal)} para envio gratis.</p>
             )}
           </div>
-          <form className="checkout-form" onSubmit={submitOrder}>
-            <div className="checkout-grid">
-              <label>
-                Nombre
-                <input value={checkout.name} onChange={(event) => updateCheckout("name", event.target.value)} type="text" placeholder="Nombre y apellido" required />
-              </label>
-              <label>
-                Telefono
-                <input value={checkout.phone} onChange={(event) => updateCheckout("phone", event.target.value)} type="tel" placeholder="WhatsApp" required />
-              </label>
-              <label>
-                Email
-                <input value={checkout.email} onChange={(event) => updateCheckout("email", event.target.value)} type="email" placeholder="tu@email.com" />
-              </label>
-              <label>
-                Entrega
-                <select value={checkout.delivery} onChange={(event) => updateCheckout("delivery", event.target.value)}>
-                  <option>Retiro en tienda</option>
-                  <option>Envio a domicilio</option>
-                  <option>Coordinar por WhatsApp</option>
-                </select>
-              </label>
-            </div>
-
-            {checkout.delivery === "Envio a domicilio" && (
-              <label>
-                Direccion
-                <input value={checkout.address} onChange={(event) => updateCheckout("address", event.target.value)} type="text" placeholder="Calle, numero, localidad" required />
-              </label>
-            )}
-
-            <label>
-              Pago
-              <select value={checkout.payment} onChange={(event) => updateCheckout("payment", event.target.value)}>
-                <option>Efectivo</option>
-                <option>Transferencia</option>
-                <option>Mercado Pago</option>
-                <option>Coordinar</option>
-              </select>
-            </label>
-            <p className="payment-help">
-              {checkout.payment === "Transferencia" && "Al confirmar, guardamos el pedido y te pasamos los datos de transferencia por WhatsApp."}
-              {checkout.payment === "Mercado Pago" && "Dejamos el pedido reservado y te enviamos el link de Mercado Pago para completar el pago."}
-              {checkout.payment === "Efectivo" && "Pagas al retirar o al coordinar la entrega."}
-              {checkout.payment === "Coordinar" && "Te contactamos para elegir el metodo de pago mas comodo."}
-            </p>
-
-            <label className="checkbox-label checkout-check">
-              <input checked={checkout.notifyByEmail} onChange={(event) => updateCheckout("notifyByEmail", event.target.checked)} type="checkbox" />
-              Enviarme confirmacion y novedades al email
-            </label>
-
-            <label>
-              Comentarios
-              <textarea value={checkout.notes} onChange={(event) => updateCheckout("notes", event.target.value)} placeholder="Nombre en camiseta, colores o cualquier detalle del pedido" rows="3" />
-            </label>
-
-            {checkoutStatus.message && <p className={`checkout-message ${checkoutStatus.state}`}>{checkoutStatus.message}</p>}
-            <a className="whatsapp-checkout" href={`https://wa.me/${whatsappNumber}?text=${buildWhatsAppMessage()}`} target="_blank" rel="noreferrer">
-              Consultar por WhatsApp
-            </a>
+          {checkoutStatus.message && <p className={`checkout-message ${checkoutStatus.state}`}>{checkoutStatus.message}</p>}
+          <a className="whatsapp-checkout" href={`https://wa.me/${whatsappNumber}?text=${buildWhatsAppMessage()}`} target="_blank" rel="noreferrer">
+            Consultar por WhatsApp
+          </a>
+          <div className="cart-step-actions">
+            {checkoutStep > 1 && <button className="secondary-step-button" type="button" onClick={() => setCheckoutStep((currentStep) => Math.max(currentStep - 1, 1))}>Volver</button>}
             <button className="checkout-button" type="submit" disabled={checkoutStatus.state === "loading" || !cartLines.length}>
-              {checkoutStatus.state === "loading" ? "Enviando pedido..." : "Finalizar compra"}
+              {checkoutStatus.state === "loading" ? "Enviando pedido..." : checkoutStep < 3 ? "Continuar" : "Finalizar compra"}
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </aside>
 
       <aside className={`mobile-menu ${isMenuOpen ? "is-open" : ""}`} aria-label="Menu mobile" aria-hidden={!isMenuOpen}>
@@ -992,11 +1157,12 @@ export default function App() {
           <a href="#productos" onClick={(event) => { event.preventDefault(); openMobileCategory("Todos"); }}>Indumentaria</a>
           <a href="#productos" onClick={(event) => { event.preventDefault(); openMobileCategory("Accesorios"); }}>Accesorios</a>
           <a href="/registro" onClick={(event) => { event.preventDefault(); setMenuOpen(false); navigateTo("/registro"); }}>Registro</a>
+          <a href="/cuenta" onClick={(event) => { event.preventDefault(); setMenuOpen(false); navigateTo("/cuenta"); }}>Mi cuenta</a>
           </nav>
 
         <div className="mobile-account">
           <UserRound size={21} />
-          <a href="/registro" onClick={(event) => { event.preventDefault(); setMenuOpen(false); navigateTo("/registro"); }}>Mi cuenta</a>
+          <a href="/cuenta" onClick={(event) => { event.preventDefault(); setMenuOpen(false); navigateTo("/cuenta"); }}>Mi cuenta</a>
         </div>
       </aside>
 
