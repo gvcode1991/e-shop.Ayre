@@ -111,6 +111,8 @@ function normalizeProduct(productData) {
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean);
+  const imageUrl = String(productData.imageUrl || productData.image || "").trim();
+  const images = normalizeImages(productData.images, imageUrl);
 
   if (!id || !name || !productData.category || !productData.description) {
     throw new Error("Codigo, nombre, categoria y descripcion son obligatorios.");
@@ -123,10 +125,31 @@ function normalizeProduct(productData) {
     tags,
     description: String(productData.description).trim(),
     price: Number(productData.price || 0),
-    image: String(productData.image || "").trim(),
+    image: imageUrl,
+    imageUrl,
+    images,
     badge: String(productData.badge || "").trim(),
     stock: Number(productData.stock || 0),
+    active: parseActive(productData.active),
   };
+}
+
+function parseActive(value) {
+  if (value === undefined || value === null || value === "") return true;
+  if (typeof value === "boolean") return value;
+  return String(value).toLowerCase() !== "false";
+}
+
+function normalizeImages(imagesData, imageUrl) {
+  const images = Array.isArray(imagesData)
+    ? imagesData
+    : String(imagesData || "")
+        .split(/[\n,]+/)
+        .map((image) => image.trim())
+        .filter(Boolean);
+
+  const uniqueImages = [...new Set([imageUrl, ...images].filter(Boolean))];
+  return uniqueImages;
 }
 
 function slugify(text) {

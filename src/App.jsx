@@ -30,7 +30,7 @@ const fallbackProducts = [
 
 const productImages = Object.fromEntries(fallbackProducts.map((product) => [product.id, product.image]));
 const categories = ["Todos", "Conjuntos", "Camisetas", "Selecciones", "Clubes"];
-const appVersion = "1.3.0";
+const appVersion = "1.4.0";
 const apiUrl = import.meta.env.VITE_API_URL || "/api";
 const formatter = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const availableSizes = ["4", "6", "8", "10", "12", "14", "S", "M", "L", "XL"];
@@ -55,8 +55,10 @@ const emptyProductForm = {
   description: "",
   price: "",
   image: "",
+  images: "",
   badge: "",
   stock: "",
+  active: true,
 };
 const emptyUserForm = {
   name: "",
@@ -115,11 +117,20 @@ export default function App() {
         throw new Error(data.message || "No pudimos cargar el catalogo.");
       }
 
-      const apiProducts = data.products.map((product) => ({
-        ...product,
-        sourceImage: product.image,
-        image: product.image?.startsWith("http") ? product.image : productImages[product.id] || product.image,
-      }));
+      const apiProducts = data.products.map((product) => {
+        const primaryImage = product.imageUrl || product.image || "";
+        const resolvedPrimaryImage = primaryImage.startsWith("http") ? primaryImage : productImages[product.id] || primaryImage;
+        const galleryImages = (product.images?.length ? product.images : [primaryImage]).filter(Boolean);
+
+        return {
+          ...product,
+          sourceImage: primaryImage,
+          imageUrl: primaryImage,
+          image: resolvedPrimaryImage,
+          images: galleryImages.map((image) => (image.startsWith("http") ? image : productImages[product.id] || image)),
+          active: product.active ?? true,
+        };
+      });
 
       setProducts(apiProducts);
       setCatalogStatus({ state: "ready", message: "Catalogo conectado a la API." });
@@ -144,7 +155,8 @@ export default function App() {
     [cart, products],
   );
 
-  const carouselProducts = useMemo(() => products.slice(0, 8), [products]);
+  const activeProducts = useMemo(() => products.filter((product) => product.active !== false), [products]);
+  const carouselProducts = useMemo(() => activeProducts.slice(0, 8), [activeProducts]);
 
   const cartQuantity = cartLines.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = cartLines.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -154,20 +166,20 @@ export default function App() {
 
   const visibleProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return products.filter((product) => {
+    return activeProducts.filter((product) => {
       const tags = product.tags || [];
       const normalizedCategory = category.toLowerCase();
       const matchesCategory = category === "Todos" || product.category.toLowerCase() === normalizedCategory || tags.some((tag) => tag.toLowerCase() === normalizedCategory);
       const matchesQuery = [product.name, product.category, product.description, ...tags].join(" ").toLowerCase().includes(normalizedQuery);
       return matchesCategory && matchesQuery;
     });
-  }, [category, products, query]);
+  }, [activeProducts, category, query]);
 
   const selectedProduct = useMemo(() => {
     const match = currentPath.match(/^\/producto\/([^/]+)/);
     if (!match) return null;
-    return products.find((product) => product.id === decodeURIComponent(match[1])) || null;
-  }, [currentPath, products]);
+    return activeProducts.find((product) => product.id === decodeURIComponent(match[1])) || null;
+  }, [activeProducts, currentPath]);
 
   const isAdminRoute = currentPath === "/admin";
 
@@ -268,6 +280,22 @@ export default function App() {
     setProductForm((currentProduct) => ({ ...currentProduct, [field]: value }));
   }
 
+  function appendProductImage(url) {
+    setProductForm((currentProduct) => {
+      const images = currentProduct.images
+        .split(/[\n,]+/)
+        .map((image) => image.trim())
+        .filter(Boolean);
+      const nextImages = [...new Set([currentProduct.image || url, ...images, url].filter(Boolean))];
+
+      return {
+        ...currentProduct,
+        image: currentProduct.image || url,
+        images: nextImages.join("\n"),
+      };
+    });
+  }
+
   function updateProductImageFile(file) {
     if (imageUpload.preview) {
       URL.revokeObjectURL(imageUpload.preview);
@@ -302,7 +330,7 @@ export default function App() {
         throw new Error(data.message || "No pudimos subir la imagen.");
       }
 
-      updateProductForm("image", data.image.url);
+      appendProductImage(data.image.url);
       setImageUpload((currentUpload) => ({ ...currentUpload, status: "success", message: "Imagen subida y URL cargada." }));
     } catch (error) {
       setImageUpload((currentUpload) => ({ ...currentUpload, status: "error", message: `${error.message} Revisa Cloudinary en Render.` }));
@@ -325,9 +353,11 @@ export default function App() {
       tags: (product.tags || []).join(", "),
       description: product.description,
       price: String(product.price),
-      image: product.sourceImage || product.image || "",
+      image: product.imageUrl || product.sourceImage || product.image || "",
+      images: (product.images || []).join("\n"),
       badge: product.badge || "",
       stock: String(product.stock ?? ""),
+      active: product.active ?? true,
     });
     document.getElementById("admin")?.scrollIntoView({ behavior: "smooth" });
   }
@@ -341,6 +371,9 @@ export default function App() {
       price: Number(productForm.price || 0),
       stock: Number(productForm.stock || 0),
       tags: productForm.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+      imageUrl: productForm.image,
+      images: productForm.images.split(/[\n,]+/).map((image) => image.trim()).filter(Boolean),
+      active: Boolean(productForm.active),
     };
 
     try {
@@ -536,7 +569,16 @@ export default function App() {
           <section className="product-detail" aria-label={`Detalle de ${selectedProduct.name}`}>
             <button className="text-link detail-back" type="button" onClick={() => navigateTo("/")}>Volver al catalogo</button>
             <div className="product-detail-layout">
-              <img src={selectedProduct.image} alt={selectedProduct.name} />
+              <div className="product-gallery">
+                <img className="product-gallery-main" src={selectedProduct.image} alt={selectedProduct.name} />
+                {selectedProduct.images?.length > 1 && (
+                  <div className="product-gallery-thumbs" aria-label="Galeria de imagenes">
+                    {selectedProduct.images.map((image) => (
+                      <img src={image} alt="" key={`${selectedProduct.id}-${image}`} />
+                    ))}
+                  </div>
+                )}
+              </div>
               <div>
                 <p className="eyebrow">{selectedProduct.category}</p>
                 <h2>{selectedProduct.name}</h2>
@@ -674,6 +716,10 @@ export default function App() {
                   Stock
                   <input value={productForm.stock} onChange={(event) => updateProductForm("stock", event.target.value)} type="number" min="0" placeholder="10" />
                 </label>
+                <label className="checkbox-label">
+                  <input checked={productForm.active} onChange={(event) => updateProductForm("active", event.target.checked)} type="checkbox" />
+                  Producto activo
+                </label>
               </div>
 
               <label>
@@ -681,8 +727,12 @@ export default function App() {
                 <input value={productForm.tags} onChange={(event) => updateProductForm("tags", event.target.value)} type="text" placeholder="Argentina, Selecciones, Messi" />
               </label>
               <label>
-                Imagen
+                Imagen principal
                 <input value={productForm.image} onChange={(event) => updateProductForm("image", event.target.value)} type="text" placeholder="URL de imagen o /assets/archivo.jpg" />
+              </label>
+              <label>
+                Galeria de imagenes
+                <textarea value={productForm.images} onChange={(event) => updateProductForm("images", event.target.value)} rows="4" placeholder="Una URL por linea. Cloudinary las agrega automaticamente." />
               </label>
               <div className="image-upload-box">
                 <div>
@@ -717,7 +767,7 @@ export default function App() {
                   <img src={product.image} alt="" />
                   <div>
                     <strong>{product.name}</strong>
-                    <span>{product.category} - {formatter.format(product.price)} - Stock {product.stock ?? 0}</span>
+                    <span>{product.category} - {formatter.format(product.price)} - Stock {product.stock ?? 0} - {product.active === false ? "Inactivo" : "Activo"}</span>
                   </div>
                   <div className="admin-actions">
                     <button type="button" aria-label={`Editar ${product.name}`} onClick={() => editProduct(product)}><Edit3 size={18} /></button>

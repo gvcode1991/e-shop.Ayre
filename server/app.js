@@ -188,7 +188,7 @@ export function createApp() {
         const quantity = Number(item.quantity || 0);
         const size = String(item.size || "").trim();
 
-        if (!product || quantity < 1 || !size) {
+        if (!product || product.active === false || quantity < 1 || !size) {
           return null;
         }
 

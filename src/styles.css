@@ -305,12 +305,28 @@ h2 { margin-bottom: 0; font-size: clamp(1.9rem, 3.5vw, 3.15rem); font-weight: 62
   gap: clamp(24px, 5vw, 64px);
   align-items: center;
 }
-.product-detail-layout img {
+.product-gallery {
+  display: grid;
+  gap: 12px;
+}
+.product-gallery-main {
   width: 100%;
   aspect-ratio: 1;
   border-radius: 8px;
   object-fit: cover;
   box-shadow: 0 20px 48px rgba(50, 37, 27, 0.12);
+}
+.product-gallery-thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(68px, 88px));
+  gap: 10px;
+}
+.product-gallery-thumbs img {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  object-fit: cover;
 }
 .detail-back {
   border: 0;
