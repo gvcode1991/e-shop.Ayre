@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { createOrder, listOrders } from "./services/ordersService.js";
 import { createProduct, deleteProduct, getProductById, listProducts, updateProduct } from "./services/productsService.js";
 import { uploadProductImage } from "./services/cloudinaryService.js";
-import { sendAccountConfirmationEmail, isEmailConfigured } from "./services/emailService.js";
+import { sendAccountConfirmationEmail, isEmailConfigured, verifyEmailConnection } from "./services/emailService.js";
 import { attachPurchaseToUser, confirmUserEmail, getUserByEmail, isVerifiedUserEmail, registerUser, setFavorite, updateUserPreferences } from "./services/usersService.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -44,6 +44,11 @@ export function createApp() {
       emailConfigured: isEmailConfigured(),
       mongoState: mongoose.connection.readyState,
     });
+  });
+
+  app.get("/api/health/email", async (_request, response) => {
+    const email = await verifyEmailConnection();
+    response.status(email.ok ? 200 : 503).json(email);
   });
 
   app.post("/api/uploads/products", upload.single("image"), async (request, response, next) => {

@@ -4,14 +4,8 @@ export function isEmailConfigured() {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
-export async function sendAccountConfirmationEmail(user, token) {
-  if (!isEmailConfigured()) {
-    return { sent: false, reason: "missing-smtp" };
-  }
-
-  const appUrl = process.env.PUBLIC_APP_URL || "https://e-shop-ayre.onrender.com";
-  const confirmUrl = `${appUrl}/api/users/confirm/${token}`;
-  const transporter = nodemailer.createTransport({
+function createEmailTransporter() {
+  return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),
     secure: String(process.env.SMTP_SECURE || "false") === "true",
@@ -23,6 +17,37 @@ export async function sendAccountConfirmationEmail(user, token) {
       pass: process.env.SMTP_PASS,
     },
   });
+}
+
+export async function verifyEmailConnection() {
+  if (!isEmailConfigured()) {
+    return { ok: false, configured: false, reason: "missing-smtp" };
+  }
+
+  try {
+    await createEmailTransporter().verify();
+    return { ok: true, configured: true };
+  } catch (error) {
+    return {
+      ok: false,
+      configured: true,
+      reason: "smtp-rejected",
+      code: error.code,
+      command: error.command,
+      responseCode: error.responseCode,
+      message: error.message,
+    };
+  }
+}
+
+export async function sendAccountConfirmationEmail(user, token) {
+  if (!isEmailConfigured()) {
+    return { sent: false, reason: "missing-smtp" };
+  }
+
+  const appUrl = process.env.PUBLIC_APP_URL || "https://e-shop-ayre.onrender.com";
+  const confirmUrl = `${appUrl}/api/users/confirm/${token}`;
+  const transporter = createEmailTransporter();
 
   await transporter.sendMail({
     from: process.env.MAIL_FROM || process.env.SMTP_USER,
