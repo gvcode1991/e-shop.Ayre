@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createOrder, listOrders } from "./services/ordersService.js";
-import { createProduct, deleteProduct, getProductById, listProducts, updateProduct } from "./services/productsService.js";
+import { createProduct, deleteProduct, getAvailableStock, getProductById, listProducts, updateProduct } from "./services/productsService.js";
 import { uploadProductImage } from "./services/cloudinaryService.js";
 import { sendAccountConfirmationEmail, isEmailConfigured, verifyEmailConnection } from "./services/emailService.js";
 import { attachPurchaseToUser, confirmUserEmail, getUserByEmail, isVerifiedUserEmail, registerUser, setFavorite, updateUserPreferences } from "./services/usersService.js";
@@ -252,8 +252,16 @@ export function createApp() {
         const product = await getProductById(item.id);
         const quantity = Number(item.quantity || 0);
         const size = String(item.size || "").trim();
+        const color = String(item.color || "").trim();
+        const availableStock = getAvailableStock(product?.stock || []);
+        const selectedStock = availableStock.find((stockItem) => stockItem.size.toLowerCase() === size.toLowerCase());
+        const productColors = product?.colors || [];
 
-        if (!product || product.active === false || quantity < 1 || !size) {
+        if (!product || product.active === false || quantity < 1 || !size || !selectedStock || selectedStock.quantity < quantity) {
+          return null;
+        }
+
+        if (productColors.length && !productColors.some((item) => item.toLowerCase() === color.toLowerCase())) {
           return null;
         }
 
@@ -262,13 +270,14 @@ export function createApp() {
           name: product.name,
           quantity,
           size,
+          color,
           unitPrice: product.price,
           subtotal: product.price * quantity,
         };
       }));
 
       if (orderItems.some((item) => item === null)) {
-        response.status(400).json({ message: "Hay productos invalidos o sin talle en el pedido." });
+        response.status(400).json({ message: "Hay productos invalidos, sin talle/color o sin stock suficiente." });
         return;
       }
 

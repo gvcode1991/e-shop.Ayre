@@ -2,7 +2,8 @@ import { products as seedProducts } from "../data/products.js";
 import { connectToDatabase } from "../db/mongo.js";
 import { Product } from "../models/Product.js";
 
-let memoryProducts = seedProducts.map((product) => ({ ...product }));
+const defaultStockSize = "Unico";
+let memoryProducts = seedProducts.map((product) => normalizeProduct(product));
 
 export async function listProducts(filters = {}) {
   const products = await getProducts();
@@ -86,19 +87,25 @@ async function seedProductsIfNeeded() {
   const count = await Product.countDocuments();
 
   if (count === 0) {
-    await Product.insertMany(seedProducts);
+    await Product.insertMany(seedProducts.map((product) => normalizeProduct(product)));
   }
 }
 
 function applyFilters(products, filters) {
   const category = String(filters.category || "").trim().toLowerCase();
   const query = String(filters.q || "").trim().toLowerCase();
+  const size = String(filters.size || "").trim().toLowerCase();
+  const color = String(filters.color || "").trim().toLowerCase();
 
   return products.filter((product) => {
     const tags = product.tags || [];
+    const colors = product.colors || [];
+    const stock = normalizeStock(product.stock);
     const matchesCategory = !category || product.category.toLowerCase() === category || tags.some((tag) => tag.toLowerCase() === category);
-    const searchableText = [product.name, product.category, product.description, ...tags].join(" ").toLowerCase();
-    return matchesCategory && (!query || searchableText.includes(query));
+    const matchesSize = !size || stock.some((item) => item.size.toLowerCase() === size && item.quantity > 0);
+    const matchesColor = !color || colors.some((item) => item.toLowerCase() === color);
+    const searchableText = [product.name, product.category, product.description, ...tags, ...colors, ...stock.map((item) => item.size)].join(" ").toLowerCase();
+    return matchesCategory && matchesSize && matchesColor && (!query || searchableText.includes(query));
   });
 }
 
@@ -113,6 +120,8 @@ function normalizeProduct(productData) {
         .filter(Boolean);
   const imageUrl = String(productData.imageUrl || productData.image || "").trim();
   const images = normalizeImages(productData.images, imageUrl);
+  const stock = normalizeStock(productData.stock);
+  const colors = normalizeList(productData.colors);
 
   if (!id || !name || !productData.category || !productData.description) {
     throw new Error("Codigo, nombre, categoria y descripcion son obligatorios.");
@@ -129,9 +138,14 @@ function normalizeProduct(productData) {
     imageUrl,
     images,
     badge: String(productData.badge || "").trim(),
-    stock: Number(productData.stock || 0),
+    stock,
+    colors,
     active: parseActive(productData.active),
   };
+}
+
+export function getAvailableStock(stock) {
+  return normalizeStock(stock).filter((item) => item.quantity > 0);
 }
 
 function parseActive(value) {
@@ -150,6 +164,78 @@ function normalizeImages(imagesData, imageUrl) {
 
   const uniqueImages = [...new Set([imageUrl, ...images].filter(Boolean))];
   return uniqueImages;
+}
+
+function normalizeList(value) {
+  const values = Array.isArray(value)
+    ? value
+    : String(value || "")
+        .split(/[\n,]+/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+  return [...new Set(values.map((item) => String(item).trim()).filter(Boolean))];
+}
+
+function normalizeStock(stockData) {
+  if (Array.isArray(stockData)) {
+    const stock = stockData
+      .map((item) => {
+        if (typeof item === "string") {
+          const [size, quantity] = item.split(/[:=]/).map((part) => part.trim());
+          return { size, quantity: Number(quantity || 0) };
+        }
+
+        return {
+          size: String(item?.size || "").trim(),
+          quantity: Number(item?.quantity || 0),
+        };
+      })
+      .filter((item) => item.size);
+
+    return mergeStock(stock);
+  }
+
+  if (typeof stockData === "number") {
+    return stockData > 0 ? [{ size: defaultStockSize, quantity: stockData }] : [];
+  }
+
+  const stockText = String(stockData || "").trim();
+
+  if (!stockText) {
+    return [];
+  }
+
+  if (/^\d+$/.test(stockText)) {
+    return Number(stockText) > 0 ? [{ size: defaultStockSize, quantity: Number(stockText) }] : [];
+  }
+
+  const stock = stockText
+    .split(/[\n,]+/)
+    .map((line) => {
+      const [size, quantity] = line.split(/[:=]/).map((part) => part.trim());
+      return { size, quantity: Number(quantity || 0) };
+    })
+    .filter((item) => item.size);
+
+  return mergeStock(stock);
+}
+
+function mergeStock(stock) {
+  const stockMap = new Map();
+
+  stock.forEach((item) => {
+    const size = String(item.size || "").trim();
+    const quantity = Math.max(0, Number(item.quantity || 0));
+
+    if (!size) {
+      return;
+    }
+
+    stockMap.set(size, (stockMap.get(size) || 0) + quantity);
+  });
+
+  return [...stockMap.entries()].map(([size, quantity]) => ({ size, quantity }));
 }
 
 function slugify(text) {

@@ -277,6 +277,18 @@ h2 { margin-bottom: 0; font-size: clamp(1.9rem, 3.5vw, 3.15rem); font-weight: 62
 .product-meta { display: grid; gap: 12px; cursor: pointer; }
 .product-meta h3 { margin: 0 0 6px; font-size: 1.08rem; }
 .product-meta p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.product-meta small {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 8px;
+  border: 1px solid rgba(155, 115, 80, 0.18);
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: var(--clay);
+  background: var(--cream);
+  font-size: 0.74rem;
+  font-weight: 650;
+}
 .price { white-space: nowrap; color: var(--clay); font-size: 1.08rem; font-weight: 700; }
 .add-button { width: 100%; }
 .product-actions {
@@ -343,6 +355,21 @@ h2 { margin-bottom: 0; font-size: clamp(1.9rem, 3.5vw, 3.15rem); font-weight: 62
   margin: 18px 0;
   color: var(--clay);
   font-size: clamp(1.35rem, 3vw, 2rem);
+}
+.variant-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 22px;
+}
+.variant-summary span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 600;
 }
 .detail-actions {
   display: flex;

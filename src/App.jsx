@@ -26,7 +26,17 @@ const fallbackProducts = [
   { id: "camiseta-argentina-negra", name: "Camiseta Argentina negra", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Modelo alternativo con graficas azules.", price: 34900, image: argentinaBlack, badge: "Seleccion" },
   { id: "camiseta-argentina-stock", name: "Camiseta Argentina stock", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Pack disponible con etiqueta.", price: 34900, image: argentinaStock, badge: "Stock" },
   { id: "camiseta-portugal-7", name: "Camiseta Portugal 7", category: "Camisetas", tags: ["Selecciones", "Portugal"], description: "Modelo rojo con detalles verdes.", price: 34900, image: portugalSeven, badge: "Seleccion" },
-];
+].map((product) => ({
+  ...product,
+  stock: [
+    { size: "8", quantity: 4 },
+    { size: "10", quantity: 4 },
+    { size: "12", quantity: 4 },
+    { size: "S", quantity: 3 },
+    { size: "M", quantity: 3 },
+  ],
+  colors: [],
+}));
 
 const productImages = Object.fromEntries(fallbackProducts.map((product) => [product.id, product.image]));
 const categories = ["Todos", "Conjuntos", "Camisetas", "Selecciones", "Clubes", "Accesorios"];
@@ -57,7 +67,8 @@ const emptyProductForm = {
   image: "",
   images: "",
   badge: "",
-  stock: "",
+  stock: "S: 0\nM: 0\nL: 0",
+  colors: "",
   active: true,
 };
 const emptyUserForm = {
@@ -69,6 +80,47 @@ const emptyUserForm = {
 const emptyAccountLookup = {
   email: "",
 };
+
+function normalizeStock(stock) {
+  if (Array.isArray(stock)) {
+    return stock
+      .map((item) => ({ size: String(item?.size || "").trim(), quantity: Number(item?.quantity || 0) }))
+      .filter((item) => item.size);
+  }
+
+  const quantity = Number(stock || 0);
+  return quantity > 0 ? [{ size: "Unico", quantity }] : [];
+}
+
+function stockToText(stock) {
+  return normalizeStock(stock).map((item) => `${item.size}: ${item.quantity}`).join("\n");
+}
+
+function stockTotal(stock) {
+  return normalizeStock(stock).reduce((sum, item) => sum + item.quantity, 0);
+}
+
+function parseStockText(stockText) {
+  return String(stockText || "")
+    .split(/[\n,]+/)
+    .map((line) => {
+      const [size, quantity] = line.split(/[:=]/).map((part) => part.trim());
+      return { size, quantity: Number(quantity || 0) };
+    })
+    .filter((item) => item.size);
+}
+
+function parseListText(value) {
+  return String(value || "")
+    .split(/[\n,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getProductSizes(product) {
+  const stock = normalizeStock(product?.stock);
+  return stock.length ? stock.filter((item) => item.quantity > 0).map((item) => item.size) : availableSizes;
+}
 
 function useSavedCart() {
   const [cart, setCart] = useState(() => {
@@ -133,6 +185,8 @@ export default function App() {
           imageUrl: primaryImage,
           image: resolvedPrimaryImage,
           images: galleryImages.map((image) => (image.startsWith("http") ? image : productImages[product.id] || image)),
+          stock: normalizeStock(product.stock),
+          colors: product.colors || [],
           active: product.active ?? true,
         };
       });
@@ -156,7 +210,7 @@ export default function App() {
   }, [imageUpload.preview]);
 
   const cartLines = useMemo(
-    () => cart.map((item) => ({ ...products.find((product) => product.id === item.id), quantity: item.quantity, size: item.size || "" })).filter((item) => item.id),
+    () => cart.map((item) => ({ ...products.find((product) => product.id === item.id), quantity: item.quantity, size: item.size || "", color: item.color || "" })).filter((item) => item.id),
     [cart, products],
   );
 
@@ -168,6 +222,7 @@ export default function App() {
   const currentShippingCost = checkout.delivery === "Envio a domicilio" && cartSubtotal < freeShippingThreshold ? shippingCost : 0;
   const cartTotal = cartSubtotal + currentShippingCost;
   const missingSizes = cartLines.filter((item) => !item.size);
+  const missingColors = cartLines.filter((item) => item.colors?.length > 0 && !item.color);
 
   const visibleProducts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -202,7 +257,7 @@ export default function App() {
       if (existing) {
         return currentCart.map((item) => (item.id === productId ? { ...item, quantity: item.quantity + 1 } : item));
       }
-      return [...currentCart, { id: productId, quantity: 1, size: "" }];
+      return [...currentCart, { id: productId, quantity: 1, size: "", color: "" }];
     });
     setCartOpen(true);
     setCheckoutStep(1);
@@ -217,6 +272,11 @@ export default function App() {
   function updateCartSize(productId, size) {
     setCheckoutStatus({ state: "idle", message: "" });
     setCart((currentCart) => currentCart.map((item) => (item.id === productId ? { ...item, size } : item)));
+  }
+
+  function updateCartColor(productId, color) {
+    setCheckoutStatus({ state: "idle", message: "" });
+    setCart((currentCart) => currentCart.map((item) => (item.id === productId ? { ...item, color } : item)));
   }
 
   function navigateTo(path) {
@@ -454,7 +514,8 @@ export default function App() {
       image: product.imageUrl || product.sourceImage || product.image || "",
       images: (product.images || []).join("\n"),
       badge: product.badge || "",
-      stock: String(product.stock ?? ""),
+      stock: stockToText(product.stock),
+      colors: (product.colors || []).join(", "),
       active: product.active ?? true,
     });
     document.getElementById("admin")?.scrollIntoView({ behavior: "smooth" });
@@ -467,7 +528,8 @@ export default function App() {
     const payload = {
       ...productForm,
       price: Number(productForm.price || 0),
-      stock: Number(productForm.stock || 0),
+      stock: parseStockText(productForm.stock),
+      colors: parseListText(productForm.colors),
       tags: productForm.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
       imageUrl: productForm.image,
       images: productForm.images.split(/[\n,]+/).map((image) => image.trim()).filter(Boolean),
@@ -532,6 +594,11 @@ export default function App() {
       return;
     }
 
+    if (missingColors.length) {
+      setCheckoutStatus({ state: "error", message: "Elegi el color de cada producto antes de finalizar." });
+      return;
+    }
+
     if (checkoutStep === 1) {
       setCheckoutStatus({ state: "idle", message: "" });
       setCheckoutStep(2);
@@ -567,7 +634,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer: checkout,
-          items: cartLines.map((item) => ({ id: item.id, quantity: item.quantity, size: item.size })),
+          items: cartLines.map((item) => ({ id: item.id, quantity: item.quantity, size: item.size, color: item.color })),
           totals: {
             subtotal: cartSubtotal,
             shipping: currentShippingCost,
@@ -598,7 +665,7 @@ export default function App() {
   }
 
   function buildWhatsAppMessage() {
-    const lines = cartLines.map((item) => `- ${item.name} talle ${item.size || "sin talle"} x${item.quantity}: ${formatter.format(item.price * item.quantity)}`);
+    const lines = cartLines.map((item) => `- ${item.name} talle ${item.size || "sin talle"}${item.color ? ` color ${item.color}` : ""} x${item.quantity}: ${formatter.format(item.price * item.quantity)}`);
     return encodeURIComponent([
       "Hola AyRe, quiero finalizar mi compra:",
       ...lines,
@@ -699,6 +766,11 @@ export default function App() {
                 <h2>{selectedProduct.name}</h2>
                 <p>{selectedProduct.description}</p>
                 <strong className="detail-price">{formatter.format(selectedProduct.price)}</strong>
+                <div className="variant-summary" aria-label="Variantes disponibles">
+                  <span>Stock total: {stockTotal(selectedProduct.stock)}</span>
+                  <span>Talles: {getProductSizes(selectedProduct).join(", ")}</span>
+                  {selectedProduct.colors?.length > 0 && <span>Colores: {selectedProduct.colors.join(", ")}</span>}
+                </div>
                 <div className="detail-actions">
                   <button className="primary-action" type="button" onClick={() => addToCart(selectedProduct.id)}>Agregar al carrito</button>
                   <button className="favorite-button" type="button" onClick={() => toggleFavorite(selectedProduct.id)}>
@@ -770,7 +842,7 @@ export default function App() {
                 </div>
                 <div className="product-info">
                   <div className="product-meta" role="button" tabIndex={0} onClick={() => navigateTo(`/producto/${product.id}`)} onKeyDown={(event) => { if (event.key === "Enter") navigateTo(`/producto/${product.id}`); }}>
-                    <div><h3>{product.name}</h3><p>{product.description}</p></div>
+                    <div><h3>{product.name}</h3><p>{product.description}</p><small>{stockTotal(product.stock)} disponibles</small></div>
                     <span className="price">{formatter.format(product.price)}</span>
                   </div>
                   <div className="product-actions">
@@ -828,8 +900,8 @@ export default function App() {
                   <input value={productForm.price} onChange={(event) => updateProductForm("price", event.target.value)} type="number" min="0" placeholder="34900" required />
                 </label>
                 <label>
-                  Stock
-                  <input value={productForm.stock} onChange={(event) => updateProductForm("stock", event.target.value)} type="number" min="0" placeholder="10" />
+                  Colores
+                  <input value={productForm.colors} onChange={(event) => updateProductForm("colors", event.target.value)} type="text" placeholder="Azul, Blanco, Negro" />
                 </label>
                 <label className="checkbox-label">
                   <input checked={productForm.active} onChange={(event) => updateProductForm("active", event.target.checked)} type="checkbox" />
@@ -848,6 +920,10 @@ export default function App() {
               <label>
                 Galeria de imagenes
                 <textarea value={productForm.images} onChange={(event) => updateProductForm("images", event.target.value)} rows="4" placeholder="Una URL por linea. Cloudinary las agrega automaticamente." />
+              </label>
+              <label>
+                Stock por talle
+                <textarea value={productForm.stock} onChange={(event) => updateProductForm("stock", event.target.value)} rows="4" placeholder={"S: 5\nM: 8\nL: 2"} />
               </label>
               <div className="image-upload-box">
                 <div>
@@ -882,7 +958,7 @@ export default function App() {
                   <img src={product.image} alt="" />
                   <div>
                     <strong>{product.name}</strong>
-                    <span>{product.category} - {formatter.format(product.price)} - Stock {product.stock ?? 0} - {product.active === false ? "Inactivo" : "Activo"}</span>
+                    <span>{product.category} - {formatter.format(product.price)} - Stock {stockTotal(product.stock)} - {product.colors?.length ? `Colores ${product.colors.join(", ")} - ` : ""}{product.active === false ? "Inactivo" : "Activo"}</span>
                   </div>
                   <div className="admin-actions">
                     <button type="button" aria-label={`Editar ${product.name}`} onClick={() => editProduct(product)}><Edit3 size={18} /></button>
@@ -1009,9 +1085,18 @@ export default function App() {
                       Talle
                       <select value={item.size} onChange={(event) => updateCartSize(item.id, event.target.value)} required>
                         <option value="">Elegir</option>
-                        {availableSizes.map((size) => <option value={size} key={`${item.id}-${size}`}>{size}</option>)}
+                        {getProductSizes(item).map((size) => <option value={size} key={`${item.id}-${size}`}>{size}</option>)}
                       </select>
                     </label>
+                    {item.colors?.length > 0 && (
+                      <label className="line-size">
+                        Color
+                        <select value={item.color} onChange={(event) => updateCartColor(item.id, event.target.value)} required>
+                          <option value="">Elegir</option>
+                          {item.colors.map((color) => <option value={color} key={`${item.id}-${color}`}>{color}</option>)}
+                        </select>
+                      </label>
+                    )}
                     <div className="qty-controls" aria-label={`Cantidad de ${item.name}`}>
                       <button type="button" onClick={() => updateQuantity(item.id, -1)} aria-label="Restar"><Minus size={16} /></button>
                       <strong>{item.quantity}</strong>
@@ -1090,7 +1175,7 @@ export default function App() {
               <h3>Revisar pedido</h3>
               {cartLines.map((item) => (
                 <div className="review-line" key={`review-${item.id}`}>
-                  <span>{item.name} - talle {item.size || "sin talle"} x{item.quantity}</span>
+                  <span>{item.name} - talle {item.size || "sin talle"}{item.color ? ` - color ${item.color}` : ""} x{item.quantity}</span>
                   <strong>{formatter.format(item.price * item.quantity)}</strong>
                 </div>
               ))}
