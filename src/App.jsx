@@ -2,12 +2,6 @@ import { Edit3, Facebook, Heart, Home, Instagram, Menu, Minus, PackageCheck, Plu
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 
-import localLogoAyre from "../assets/logo-ayre-nav.png";
-import localHeroImage from "../assets/hero-ayre-2.jpg";
-import localBocaTrack from "../assets/conjunto-boca-azul.jpg";
-import localArgentinaHome from "../assets/camiseta-argentina-10.jpg";
-import localArgentinaBlack from "../assets/camiseta-argentina-negra.jpg";
-
 const cloudinaryImages = {
   logo: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782940698/logo2_e9t5y4.png",
   hero: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782931971/hero2_rw1udu.png",
@@ -63,7 +57,7 @@ const fallbackProducts = [
 
 const productImages = Object.fromEntries(fallbackProducts.map((product) => [product.id, product.image]));
 const categories = ["Todos", "Conjuntos", "Camisetas", "Selecciones", "Clubes", "Accesorios"];
-const appVersion = "1.5.3";
+const appVersion = "1.5.4";
 const apiUrl = import.meta.env.VITE_API_URL || "/api";
 const formatter = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const availableSizes = ["4", "6", "8", "10", "12", "14", "S", "M", "L", "XL"];
@@ -801,7 +795,7 @@ export default function App() {
           </button>
 
           <a className="brand" href="/" aria-label="AyRe inicio" onClick={(event) => { event.preventDefault(); navigateTo("/"); }}>
-            <img className="brand-mark" src={logoAyre} alt="" onError={(event) => { event.currentTarget.src = localLogoAyre; }} />
+            <img className="brand-mark" src={logoAyre} alt="" />
             <span className="brand-name">AyRe</span>
           </a>
 
@@ -844,7 +838,7 @@ export default function App() {
       <main id={isAdminRoute ? "admin" : isRegisterRoute ? "registro" : isAccountRoute ? "cuenta" : "inicio"}>
         {!isAdminRoute && !isRegisterRoute && !isAccountRoute && (
           <>
-        <section className="hero" style={{ "--hero-image": cssImageUrl(cloudinaryImages.hero), "--hero-fallback": cssImageUrl(localHeroImage) }}>
+        <section className="hero" style={{ "--hero-image": cssImageUrl(cloudinaryImages.hero) }}>
           <div className="hero-copy">
             <p className="eyebrow">AyRe indumentaria</p>
             <h1>Prendas y accesorios para tu estilo diario</h1>
@@ -908,13 +902,13 @@ export default function App() {
         </section>
 
         <section className="category-showcase" aria-label="Categorias destacadas">
-          <button className="category-tile large" type="button" style={{ "--tile-image": cssImageUrl(cloudinaryImages.camisetaArgentina10), "--tile-fallback": cssImageUrl(localArgentinaHome) }} onClick={() => openMobileCategory("Camisetas")}>
+          <button className="category-tile large" type="button" style={{ "--tile-image": cssImageUrl(cloudinaryImages.camisetaArgentina10) }} onClick={() => openMobileCategory("Camisetas")}>
             <span>Camisetas mundialistas</span>
           </button>
-          <button className="category-tile" type="button" style={{ "--tile-image": cssImageUrl(cloudinaryImages.conjuntoBocaAzul), "--tile-fallback": cssImageUrl(localBocaTrack) }} onClick={() => openMobileCategory("Conjuntos")}>
+          <button className="category-tile" type="button" style={{ "--tile-image": cssImageUrl(cloudinaryImages.conjuntoBocaAzul) }} onClick={() => openMobileCategory("Conjuntos")}>
             <span>Conjuntos deportivos</span>
           </button>
-          <button className="category-tile" type="button" style={{ "--tile-image": cssImageUrl(cloudinaryImages.camisetaArgentinaNegra), "--tile-fallback": cssImageUrl(localArgentinaBlack) }} onClick={() => openMobileCategory("Selecciones")}>
+          <button className="category-tile" type="button" style={{ "--tile-image": cssImageUrl(cloudinaryImages.camisetaArgentinaNegra) }} onClick={() => openMobileCategory("Selecciones")}>
             <span>Selecciones</span>
           </button>
         </section>
@@ -1219,7 +1213,7 @@ export default function App() {
         </div>
 
         <a className="footer-brand" href="#inicio" aria-label="AyRe inicio">
-          <img src={logoAyre} alt="" onError={(event) => { event.currentTarget.src = localLogoAyre; }} />
+          <img src={logoAyre} alt="" />
           <span>AyRe</span>
         </a>
 
