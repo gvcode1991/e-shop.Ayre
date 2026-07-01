@@ -1,7 +1,9 @@
-import { Edit3, Facebook, Heart, Instagram, PackageCheck, Save, Search, ShoppingBag, Trash2, Truck, UserRound, X } from "lucide-react";
+import { Facebook, Heart, Instagram, PackageCheck, Search, ShoppingBag, Truck, UserRound, X } from "lucide-react";
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 
+import { AccountPanel } from "./components/account/AccountPanel";
+import { AdminPanel } from "./components/admin/AdminPanel";
 import { CartDrawer } from "./components/cart/CartDrawer";
 import { Header } from "./components/layout/Header";
 import { Hero } from "./components/layout/Hero";
@@ -846,200 +848,41 @@ export default function App() {
         )}
 
         {isAdminRoute && (
-        <section className="admin-section" id="admin">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Gestion</p>
-              <h2>Panel admin</h2>
-              <p className="catalog-note">Alta, baja y modificacion de productos del catalogo.</p>
-            </div>
-            <button className="secondary-admin-button" type="button" onClick={resetProductForm}>Nuevo producto</button>
-          </div>
-
-          <form className="admin-form admin-unlock" onSubmit={unlockAdmin}>
-            <h3>Acceso admin</h3>
-            <label>
-              Email admin
-              <input value={adminLogin.email} onChange={(event) => { setAdminLogin((current) => ({ ...current, email: event.target.value })); setAdminUnlocked(false); setAdminToken(""); }} type="email" placeholder="admin@ayre.com.ar" />
-            </label>
-            <label>
-              Contrasena admin
-              <input value={adminLogin.password} onChange={(event) => { setAdminLogin((current) => ({ ...current, password: event.target.value })); setAdminUnlocked(false); setAdminToken(""); }} type="password" placeholder="Contrasena privada" />
-            </label>
-            {adminStatus.message && <p className={`checkout-message ${adminStatus.state}`}>{adminStatus.message}</p>}
-            <button className="secondary-admin-button" type="submit">Desbloquear panel</button>
-          </form>
-
-          <div className="admin-layout">
-            <form className="admin-form" onSubmit={submitProduct}>
-              <h3>{editingProductId ? "Editar producto" : "Agregar producto"}</h3>
-              <div className="admin-grid">
-                <label>
-                  Codigo
-                  <input value={productForm.id} onChange={(event) => updateProductForm("id", event.target.value)} type="text" placeholder="camiseta-argentina-10" disabled={Boolean(editingProductId)} />
-                </label>
-                <label>
-                  Nombre
-                  <input value={productForm.name} onChange={(event) => updateProductForm("name", event.target.value)} type="text" placeholder="Nombre del producto" required />
-                </label>
-                <label>
-                  Categoria
-                  <select value={productForm.category} onChange={(event) => updateProductForm("category", event.target.value)}>
-                    <option>Conjuntos</option>
-                    <option>Camisetas</option>
-                    <option>Selecciones</option>
-                    <option>Clubes</option>
-                  </select>
-                </label>
-                <label>
-                  Etiqueta
-                  <input value={productForm.badge} onChange={(event) => updateProductForm("badge", event.target.value)} type="text" placeholder="Nuevo, Stock, Club..." />
-                </label>
-                <label>
-                  Precio
-                  <input value={productForm.price} onChange={(event) => updateProductForm("price", event.target.value)} type="number" min="0" placeholder="34900" required />
-                </label>
-                <label>
-                  Colores
-                  <input value={productForm.colors} onChange={(event) => updateProductForm("colors", event.target.value)} type="text" placeholder="Azul, Blanco, Negro" />
-                </label>
-                <label className="checkbox-label">
-                  <input checked={productForm.active} onChange={(event) => updateProductForm("active", event.target.checked)} type="checkbox" />
-                  Producto activo
-                </label>
-              </div>
-
-              <label>
-                Tags
-                <input value={productForm.tags} onChange={(event) => updateProductForm("tags", event.target.value)} type="text" placeholder="Argentina, Selecciones, Messi" />
-              </label>
-              <label>
-                Imagen principal
-                <input value={productForm.image} onChange={(event) => updateProductForm("image", event.target.value)} type="text" placeholder="URL de imagen de Cloudinary" />
-              </label>
-              <label>
-                Galeria de imagenes
-                <textarea value={productForm.images} onChange={(event) => updateProductForm("images", event.target.value)} rows="4" placeholder="Una URL por linea. Cloudinary las agrega automaticamente." />
-              </label>
-              <label>
-                Stock por talle
-                <textarea value={productForm.stock} onChange={(event) => updateProductForm("stock", event.target.value)} rows="4" placeholder={"S: 5\nM: 8\nL: 2"} />
-              </label>
-              <div className="image-upload-box">
-                <div>
-                  <strong>Subir imagen</strong>
-                  <span>JPG, PNG o WebP hasta 5 MB. Se guarda en Cloudinary.</span>
-                </div>
-                <input type="file" accept="image/*" onChange={(event) => updateProductImageFile(event.target.files?.[0] || null)} />
-                {(imageUpload.preview || productForm.image) && (
-                  <img src={imageUpload.preview || productForm.image} alt="Vista previa del producto" />
-                )}
-                <button className="secondary-admin-button" type="button" onClick={uploadProductImage} disabled={imageUpload.status === "loading" || !imageUpload.file}>
-                  {imageUpload.status === "loading" ? "Subiendo..." : "Subir a Cloudinary"}
-                </button>
-                {imageUpload.message && <p className={`upload-message ${imageUpload.status}`}>{imageUpload.message}</p>}
-              </div>
-              <label>
-                Descripcion
-                <textarea value={productForm.description} onChange={(event) => updateProductForm("description", event.target.value)} rows="3" placeholder="Descripcion corta para el catalogo" required />
-              </label>
-
-              {adminStatus.message && adminUnlocked && <p className={`checkout-message ${adminStatus.state}`}>{adminStatus.message}</p>}
-
-              <button className="checkout-button" type="submit" disabled={adminStatus.state === "loading" || !adminUnlocked}>
-                <Save size={18} />
-                {editingProductId ? "Guardar cambios" : "Crear producto"}
-              </button>
-            </form>
-
-            <div className="admin-products" aria-live="polite">
-              {products.map((product) => (
-                <article className="admin-product-row" key={`admin-${product.id}`}>
-                  <img src={product.image} alt="" />
-                  <div>
-                    <strong>{product.name}</strong>
-                    <span>{product.category} - {formatter.format(product.price)} - Stock {stockTotal(product.stock)} - {product.colors?.length ? `Colores ${product.colors.join(", ")} - ` : ""}{product.active === false ? "Inactivo" : "Activo"}</span>
-                  </div>
-                  <div className="admin-actions">
-                    <button type="button" aria-label={`Editar ${product.name}`} onClick={() => editProduct(product)}><Edit3 size={18} /></button>
-                    <button type="button" aria-label={`Eliminar ${product.name}`} onClick={() => removeProduct(product.id)}><Trash2 size={18} /></button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+          <AdminPanel
+            adminLogin={adminLogin}
+            adminStatus={adminStatus}
+            adminUnlocked={adminUnlocked}
+            editingProductId={editingProductId}
+            editProduct={editProduct}
+            imageUpload={imageUpload}
+            productForm={productForm}
+            products={products}
+            removeProduct={removeProduct}
+            resetProductForm={resetProductForm}
+            setAdminLogin={setAdminLogin}
+            setAdminToken={setAdminToken}
+            setAdminUnlocked={setAdminUnlocked}
+            submitProduct={submitProduct}
+            unlockAdmin={unlockAdmin}
+            updateProductForm={updateProductForm}
+            updateProductImageFile={updateProductImageFile}
+            uploadProductImage={uploadProductImage}
+          />
         )}
 
-        {isRegisterRoute && (
-        <section className="account-section" id="cuenta">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Cuenta</p>
-              <h2>Crear cuenta</h2>
-              <p className="catalog-note">Registrate para recibir el email de activacion. Necesitas activar la cuenta antes de comprar.</p>
-            </div>
-          </div>
-          <div className="account-layout">
-            <form className="admin-form" onSubmit={submitUser}>
-              <div className="admin-grid">
-                <label>Nombre<input value={userForm.name} onChange={(event) => updateUserForm("name", event.target.value)} type="text" required /></label>
-                <label>Email<input value={userForm.email} onChange={(event) => updateUserForm("email", event.target.value)} type="email" required /></label>
-                <label>Telefono<input value={userForm.phone} onChange={(event) => updateUserForm("phone", event.target.value)} type="tel" /></label>
-                <label>Contrasena<input value={userForm.password} onChange={(event) => updateUserForm("password", event.target.value)} type="password" minLength="8" required /></label>
-                <label className="checkbox-label"><input checked={userForm.acceptsMarketing} onChange={(event) => updateUserForm("acceptsMarketing", event.target.checked)} type="checkbox" /> Recibir novedades por email</label>
-              </div>
-              {userStatus.message && <p className={`checkout-message ${userStatus.state}`}>{userStatus.message}</p>}
-              <button className="checkout-button" type="submit">Crear cuenta y enviar confirmacion</button>
-            </form>
-            <div className="account-summary">
-              <h3>{userAccount ? userAccount.name : "Activacion por email"}</h3>
-              <p>{userAccount ? userAccount.email : "Despues de registrarte, abri el email de AyRe y confirma tu cuenta para habilitar compras."}</p>
-              <strong>{userAccount?.emailVerified ? "Cuenta activa" : "Pendiente de activacion"}</strong>
-            </div>
-          </div>
-        </section>
-        )}
-
-        {isAccountRoute && (
-        <section className="account-section" id="cuenta-admin">
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">Mi cuenta</p>
-              <h2>Administracion de cuenta</h2>
-              <p className="catalog-note">Inicia sesion para consultar tus preferencias, favoritos y compras.</p>
-            </div>
-          </div>
-          <div className="account-layout">
-            <form className="admin-form" onSubmit={loadAccount}>
-              <h3>Iniciar sesion</h3>
-              <label>Email registrado<input value={accountLookup.email} onChange={(event) => updateAccountLookup("email", event.target.value)} type="email" required /></label>
-              <label>Contrasena<input value={accountLookup.password} onChange={(event) => updateAccountLookup("password", event.target.value)} type="password" required /></label>
-              <button className="checkout-button" type="submit">Entrar</button>
-              {userStatus.message && <p className={`checkout-message ${userStatus.state}`}>{userStatus.message}</p>}
-            </form>
-            <div className="account-summary">
-              <h3>{userAccount ? userAccount.email : "Cuenta"}</h3>
-              <p>{userAccount ? `Estado: ${userAccount.emailVerified ? "activa" : "pendiente de confirmacion"}` : "Ingresa con tu email y contrasena para ver tus compras y preferencias."}</p>
-              {userAccount && (
-                <>
-                  <label className="checkbox-label account-check"><input checked={Boolean(userAccount.acceptsMarketing)} onChange={(event) => saveAccountPreferences(event.target.checked)} type="checkbox" /> Recibir notificaciones al mail</label>
-                  <strong>Favoritos: {(userAccount.favorites || []).length}</strong>
-                  <strong>Compras realizadas: {(userAccount.purchases || []).length}</strong>
-                  <div className="purchase-list">
-                    {(userAccount.purchases || []).map((purchase) => (
-                      <article key={purchase.id || purchase._id || purchase.createdAt}>
-                        <span>{purchase.createdAt ? new Date(purchase.createdAt).toLocaleDateString("es-AR") : "Compra"}</span>
-                        <strong>{formatter.format(purchase.total || 0)}</strong>
-                        <small>{purchase.status || "pending"}</small>
-                      </article>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </section>
+        {(isRegisterRoute || isAccountRoute) && (
+          <AccountPanel
+            accountLookup={accountLookup}
+            isRegisterRoute={isRegisterRoute}
+            loadAccount={loadAccount}
+            saveAccountPreferences={saveAccountPreferences}
+            submitUser={submitUser}
+            updateAccountLookup={updateAccountLookup}
+            updateUserForm={updateUserForm}
+            userAccount={userAccount}
+            userForm={userForm}
+            userStatus={userStatus}
+          />
         )}
 
         {!isAdminRoute && !isRegisterRoute && !isAccountRoute && (
