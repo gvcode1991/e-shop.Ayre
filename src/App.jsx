@@ -834,7 +834,12 @@ export default function App() {
         </section>
 
         <section className="shipping-band" aria-label="Beneficio de envio">
-          <span>Envios gratis desde $60.000</span>
+          <div>
+            <span>Envios a todo el pais</span>
+            <span>Medios de pago disponibles</span>
+            <span>Envios a todo el pais</span>
+            <span>Medios de pago disponibles</span>
+          </div>
         </section>
 
         {selectedProduct && (
@@ -874,9 +879,9 @@ export default function App() {
         )}
 
         <section className="intro-band" id="coleccion" aria-label="Valores de AyRe">
-          <div><span>01</span><strong>Clubes y selecciones</strong><p>Modelos elegidos para chicos, entrenamiento y uso urbano.</p></div>
-          <div><span>02</span><strong>Stock visible</strong><p>Catalogo preparado para sumar talles, colores y variantes.</p></div>
-          <div><span>03</span><strong>Compra simple</strong><p>Carrito persistente y estructura lista para futuro checkout.</p></div>
+          <div><span>01</span><strong>Remeras de selecciones</strong><p>Modelos elegidos para vestir comodo, sumar identidad y armar looks casuales.</p></div>
+          <div><span>02</span><strong>Conjuntos deportivos</strong><p>Prendas practicas para uso diario, entrenar o moverte con estilo.</p></div>
+          <div><span>03</span><strong>Accesorios y relojes</strong><p>Detalles seleccionados para completar tu outfit y renovar tu coleccion.</p></div>
         </section>
 
         <section className="category-showcase" aria-label="Categorias destacadas">
