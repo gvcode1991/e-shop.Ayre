@@ -1,8 +1,20 @@
-import { products as seedProducts } from "../data/products.js";
+import { cloudinaryImages, products as seedProducts } from "../data/products.js";
 import { connectToDatabase } from "../db/mongo.js";
 import { Product } from "../models/Product.js";
 
 const defaultStockSize = "Unico";
+const legacyImageUrls = {
+  "/assets/set-boca-nino.jpg": cloudinaryImages.setBocaNino,
+  "/assets/conjunto-boca-azul.jpg": cloudinaryImages.conjuntoBocaAzul,
+  "/assets/set-river-nino.jpg": cloudinaryImages.setRiverNino,
+  "/assets/conjunto-boca-blanco.jpg": cloudinaryImages.conjuntoBocaBlanco,
+  "/assets/set-racing-nino.jpg": cloudinaryImages.setRacingNino,
+  "/assets/set-al-nassr-nino.jpg": cloudinaryImages.setAlNassrNino,
+  "/assets/camiseta-argentina-10.jpg": cloudinaryImages.camisetaArgentina10,
+  "/assets/camiseta-argentina-negra.jpg": cloudinaryImages.camisetaArgentinaNegra,
+  "/assets/camiseta-argentina-stock.jpg": cloudinaryImages.camisetaArgentinaStock,
+  "/assets/camiseta-portugal-7.jpg": cloudinaryImages.camisetaPortugal7,
+};
 let memoryProducts = seedProducts.map((product) => normalizeProduct(product));
 
 export async function listProducts(filters = {}) {
@@ -14,11 +26,13 @@ export async function getProductById(id) {
   const database = await connectToDatabase();
 
   if (!database.connected) {
-    return memoryProducts.find((product) => product.id === id) || null;
+    const product = memoryProducts.find((product) => product.id === id);
+    return product ? normalizeStoredProduct(product) : null;
   }
 
   await seedProductsIfNeeded();
-  return Product.findOne({ id });
+  const product = await Product.findOne({ id });
+  return product ? normalizeStoredProduct(product) : null;
 }
 
 export async function createProduct(productData) {
@@ -55,7 +69,8 @@ export async function updateProduct(id, productData) {
   }
 
   await seedProductsIfNeeded();
-  return Product.findOneAndUpdate({ id }, product, { returnDocument: "after", runValidators: true });
+  const updatedProduct = await Product.findOneAndUpdate({ id }, product, { returnDocument: "after", runValidators: true });
+  return updatedProduct ? normalizeStoredProduct(updatedProduct) : null;
 }
 
 export async function deleteProduct(id) {
@@ -97,11 +112,12 @@ async function getProducts() {
   const database = await connectToDatabase();
 
   if (!database.connected) {
-    return memoryProducts;
+    return memoryProducts.map((product) => normalizeStoredProduct(product));
   }
 
   await seedProductsIfNeeded();
-  return Product.find().sort({ createdAt: -1 });
+  const products = await Product.find().sort({ createdAt: -1 });
+  return products.map((product) => normalizeStoredProduct(product));
 }
 
 async function seedProductsIfNeeded() {
@@ -139,7 +155,7 @@ function normalizeProduct(productData) {
         .split(",")
         .map((tag) => tag.trim())
         .filter(Boolean);
-  const imageUrl = String(productData.imageUrl || productData.image || "").trim();
+  const imageUrl = resolveImageUrl(productData.imageUrl || productData.image);
   const images = normalizeImages(productData.images, imageUrl);
   const stock = normalizeStock(productData.stock);
   const colors = normalizeList(productData.colors);
@@ -183,8 +199,24 @@ function normalizeImages(imagesData, imageUrl) {
         .map((image) => image.trim())
         .filter(Boolean);
 
-  const uniqueImages = [...new Set([imageUrl, ...images].filter(Boolean))];
+  const uniqueImages = [...new Set([imageUrl, ...images.map((image) => resolveImageUrl(image))].filter(Boolean))];
   return uniqueImages;
+}
+
+function normalizeStoredProduct(productData) {
+  const product = typeof productData.toJSON === "function" ? productData.toJSON() : { ...productData };
+  const imageUrl = resolveImageUrl(product.imageUrl || product.image);
+  return {
+    ...product,
+    image: imageUrl,
+    imageUrl,
+    images: normalizeImages(product.images, imageUrl),
+  };
+}
+
+function resolveImageUrl(imageUrl) {
+  const normalizedUrl = String(imageUrl || "").trim();
+  return legacyImageUrls[normalizedUrl] || normalizedUrl;
 }
 
 function normalizeList(value) {

@@ -2,32 +2,45 @@ import { Edit3, Facebook, Heart, Home, Instagram, Menu, Minus, PackageCheck, Plu
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 
-import logoAyre from "../assets/logo-ayre-nav.png";
-import heroImage from "../assets/hero-ayre-2.jpg";
-import bocaSet from "../assets/set-boca-nino.jpg";
-import bocaTrack from "../assets/conjunto-boca-azul.jpg";
-import riverSet from "../assets/set-river-nino.jpg";
-import bocaWhite from "../assets/conjunto-boca-blanco.jpg";
-import racingSet from "../assets/set-racing-nino.jpg";
-import nassrSet from "../assets/set-al-nassr-nino.jpg";
-import argentinaHome from "../assets/camiseta-argentina-10.jpg";
-import argentinaBlack from "../assets/camiseta-argentina-negra.jpg";
-import argentinaStock from "../assets/camiseta-argentina-stock.jpg";
-import portugalSeven from "../assets/camiseta-portugal-7.jpg";
+const cloudinaryImages = {
+  logo: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782940698/logo2_e9t5y4.png",
+  hero: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782931971/hero2_rw1udu.png",
+  setBocaNino: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932145/WhatsApp_Image_2026-06-28_at_8.23.41_PM_3_i4i90z.jpg",
+  conjuntoBocaAzul: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932144/WhatsApp_Image_2026-06-28_at_8.23.41_PM_2_fqbbbs.jpg",
+  setRiverNino: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932143/WhatsApp_Image_2026-06-28_at_8.23.41_PM_1_ndes6x.jpg",
+  conjuntoBocaBlanco: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932143/WhatsApp_Image_2026-06-28_at_8.23.40_PM_8_nyphyc.jpg",
+  setRacingNino: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932142/WhatsApp_Image_2026-06-28_at_8.23.40_PM_7_n8kcwe.jpg",
+  setAlNassrNino: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932142/WhatsApp_Image_2026-06-28_at_8.23.40_PM_5_kffkwg.jpg",
+  camisetaArgentina10: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932080/WhatsApp_Image_2026-06-28_at_8.23.40_PM_4_qflkyu.jpg",
+  camisetaArgentinaNegra: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932078/WhatsApp_Image_2026-06-28_at_8.23.40_PM_1_saxssz.jpg",
+  camisetaArgentinaStock: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932080/WhatsApp_Image_2026-06-28_at_8.23.40_PM_3_qylvrs.jpg",
+  camisetaPortugal7: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932079/WhatsApp_Image_2026-06-28_at_8.23.40_PM_2_wak6by.jpg",
+  relojNegro: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932188/WhatsApp_Image_2026-06-29_at_7.23.07_PM_jftdrd.jpg",
+  relojGold1: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932188/WhatsApp_Image_2026-06-29_at_7.23.07_PM_5_qksbfl.jpg",
+  relojGold2: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932187/WhatsApp_Image_2026-06-29_at_7.23.07_PM_4_qyucfd.jpg",
+  relojGold3: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932186/WhatsApp_Image_2026-06-29_at_7.23.07_PM_3_ewvg8n.jpg",
+  relojSilver1: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932185/WhatsApp_Image_2026-06-29_at_7.23.07_PM_2_gqv1ep.jpg",
+  relojSilver2: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932184/WhatsApp_Image_2026-06-29_at_7.23.07_PM_1_gjpudq.jpg",
+};
+const logoAyre = cloudinaryImages.logo;
 
 const fallbackProducts = [
-  { id: "set-boca-nino", name: "Set Boca nino", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Camiseta, short y medias para chicos.", price: 42900, image: bocaSet, badge: "Club" },
-  { id: "conjunto-boca-azul", name: "Conjunto Boca azul", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Campera con capucha y pantalon deportivo.", price: 54900, image: bocaTrack, badge: "Nuevo" },
-  { id: "set-river-nino", name: "Set River nino", category: "Conjuntos", tags: ["Clubes", "River"], description: "Kit completo con camiseta, short y medias.", price: 42900, image: riverSet, badge: "Club" },
-  { id: "conjunto-boca-blanco", name: "Conjunto Boca blanco", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Campera clara y pantalon con detalles.", price: 54900, image: bocaWhite, badge: "Invierno" },
-  { id: "set-racing-nino", name: "Set Racing nino", category: "Conjuntos", tags: ["Clubes", "Racing"], description: "Kit completo celeste, blanco y azul.", price: 42900, image: racingSet, badge: "Club" },
-  { id: "set-al-nassr-nino", name: "Set Al Nassr nino", category: "Conjuntos", tags: ["Clubes", "Al Nassr"], description: "Kit amarillo con short y medias.", price: 42900, image: nassrSet, badge: "Global" },
-  { id: "camiseta-argentina-10", name: "Camiseta Argentina 10", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Modelo titular con detalles dorados.", price: 34900, image: argentinaHome, badge: "Seleccion" },
-  { id: "camiseta-argentina-negra", name: "Camiseta Argentina negra", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Modelo alternativo con graficas azules.", price: 34900, image: argentinaBlack, badge: "Seleccion" },
-  { id: "camiseta-argentina-stock", name: "Camiseta Argentina stock", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Pack disponible con etiqueta.", price: 34900, image: argentinaStock, badge: "Stock" },
-  { id: "camiseta-portugal-7", name: "Camiseta Portugal 7", category: "Camisetas", tags: ["Selecciones", "Portugal"], description: "Modelo rojo con detalles verdes.", price: 34900, image: portugalSeven, badge: "Seleccion" },
+  { id: "set-boca-nino", name: "Set Boca nino", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Camiseta, short y medias para chicos.", price: 42900, image: cloudinaryImages.setBocaNino, badge: "Club" },
+  { id: "conjunto-boca-azul", name: "Conjunto Boca azul", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Campera con capucha y pantalon deportivo.", price: 54900, image: cloudinaryImages.conjuntoBocaAzul, badge: "Nuevo" },
+  { id: "set-river-nino", name: "Set River nino", category: "Conjuntos", tags: ["Clubes", "River"], description: "Kit completo con camiseta, short y medias.", price: 42900, image: cloudinaryImages.setRiverNino, badge: "Club" },
+  { id: "conjunto-boca-blanco", name: "Conjunto Boca blanco", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Campera clara y pantalon con detalles.", price: 54900, image: cloudinaryImages.conjuntoBocaBlanco, badge: "Invierno" },
+  { id: "set-racing-nino", name: "Set Racing nino", category: "Conjuntos", tags: ["Clubes", "Racing"], description: "Kit completo celeste, blanco y azul.", price: 42900, image: cloudinaryImages.setRacingNino, badge: "Club" },
+  { id: "set-al-nassr-nino", name: "Set Al Nassr nino", category: "Conjuntos", tags: ["Clubes", "Al Nassr"], description: "Kit amarillo con short y medias.", price: 42900, image: cloudinaryImages.setAlNassrNino, badge: "Global" },
+  { id: "camiseta-argentina-10", name: "Camiseta Argentina 10", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Modelo titular con detalles dorados.", price: 34900, image: cloudinaryImages.camisetaArgentina10, badge: "Seleccion" },
+  { id: "camiseta-argentina-negra", name: "Camiseta Argentina negra", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Modelo alternativo con graficas azules.", price: 34900, image: cloudinaryImages.camisetaArgentinaNegra, badge: "Seleccion" },
+  { id: "camiseta-argentina-stock", name: "Camiseta Argentina stock", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Pack disponible con etiqueta.", price: 34900, image: cloudinaryImages.camisetaArgentinaStock, badge: "Stock" },
+  { id: "camiseta-portugal-7", name: "Camiseta Portugal 7", category: "Camisetas", tags: ["Selecciones", "Portugal"], description: "Modelo rojo con detalles verdes.", price: 34900, image: cloudinaryImages.camisetaPortugal7, badge: "Seleccion" },
+  { id: "reloj-negro", name: "Reloj negro", category: "Accesorios", tags: ["Relojes"], description: "Reloj negro para completar tu look diario.", price: 29900, image: cloudinaryImages.relojNegro, badge: "Accesorio" },
+  { id: "reloj-gold", name: "Reloj gold", category: "Accesorios", tags: ["Relojes"], description: "Reloj dorado con terminacion elegante.", price: 29900, image: cloudinaryImages.relojGold1, images: [cloudinaryImages.relojGold1, cloudinaryImages.relojGold2, cloudinaryImages.relojGold3], badge: "Accesorio" },
+  { id: "reloj-silver", name: "Reloj silver", category: "Accesorios", tags: ["Relojes"], description: "Reloj plateado versatil para todos los dias.", price: 29900, image: cloudinaryImages.relojSilver1, images: [cloudinaryImages.relojSilver1, cloudinaryImages.relojSilver2], badge: "Accesorio" },
 ].map((product) => ({
   ...product,
+  images: product.images || [product.image],
   stock: [
     { size: "8", quantity: 4 },
     { size: "10", quantity: 4 },
@@ -40,7 +53,7 @@ const fallbackProducts = [
 
 const productImages = Object.fromEntries(fallbackProducts.map((product) => [product.id, product.image]));
 const categories = ["Todos", "Conjuntos", "Camisetas", "Selecciones", "Clubes", "Accesorios"];
-const appVersion = "1.5.1";
+const appVersion = "1.5.2";
 const apiUrl = import.meta.env.VITE_API_URL || "/api";
 const formatter = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const availableSizes = ["4", "6", "8", "10", "12", "14", "S", "M", "L", "XL"];
@@ -821,7 +834,7 @@ export default function App() {
       <main id={isAdminRoute ? "admin" : isRegisterRoute ? "registro" : isAccountRoute ? "cuenta" : "inicio"}>
         {!isAdminRoute && !isRegisterRoute && !isAccountRoute && (
           <>
-        <section className="hero" style={{ "--hero-image": `url(${heroImage})` }}>
+        <section className="hero" style={{ "--hero-image": `url(${cloudinaryImages.hero})` }}>
           <div className="hero-copy">
             <p className="eyebrow">AyRe indumentaria</p>
             <h1>Prendas y accesorios para tu estilo diario</h1>
@@ -885,13 +898,13 @@ export default function App() {
         </section>
 
         <section className="category-showcase" aria-label="Categorias destacadas">
-          <button className="category-tile large" type="button" style={{ "--tile-image": `url(${argentinaHome})` }} onClick={() => openMobileCategory("Camisetas")}>
+          <button className="category-tile large" type="button" style={{ "--tile-image": `url(${cloudinaryImages.camisetaArgentina10})` }} onClick={() => openMobileCategory("Camisetas")}>
             <span>Camisetas mundialistas</span>
           </button>
-          <button className="category-tile" type="button" style={{ "--tile-image": `url(${bocaTrack})` }} onClick={() => openMobileCategory("Conjuntos")}>
+          <button className="category-tile" type="button" style={{ "--tile-image": `url(${cloudinaryImages.conjuntoBocaAzul})` }} onClick={() => openMobileCategory("Conjuntos")}>
             <span>Conjuntos deportivos</span>
           </button>
-          <button className="category-tile" type="button" style={{ "--tile-image": `url(${argentinaBlack})` }} onClick={() => openMobileCategory("Selecciones")}>
+          <button className="category-tile" type="button" style={{ "--tile-image": `url(${cloudinaryImages.camisetaArgentinaNegra})` }} onClick={() => openMobileCategory("Selecciones")}>
             <span>Selecciones</span>
           </button>
         </section>
@@ -1030,7 +1043,7 @@ export default function App() {
               </label>
               <label>
                 Imagen principal
-                <input value={productForm.image} onChange={(event) => updateProductForm("image", event.target.value)} type="text" placeholder="URL de imagen o /assets/archivo.jpg" />
+                <input value={productForm.image} onChange={(event) => updateProductForm("image", event.target.value)} type="text" placeholder="URL de imagen de Cloudinary" />
               </label>
               <label>
                 Galeria de imagenes
