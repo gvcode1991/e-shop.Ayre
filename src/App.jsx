@@ -2,9 +2,9 @@ import { Edit3, Facebook, Heart, Home, Instagram, Menu, Minus, PackageCheck, Plu
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 
+import { images } from "./config/images";
+
 const cloudinaryImages = {
-  logo: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782940698/logo2_e9t5y4.png",
-  hero: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782931971/hero2_rw1udu.png",
   setBocaNino: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932145/WhatsApp_Image_2026-06-28_at_8.23.41_PM_3_i4i90z.jpg",
   conjuntoBocaAzul: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932144/WhatsApp_Image_2026-06-28_at_8.23.41_PM_2_fqbbbs.jpg",
   setRiverNino: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932143/WhatsApp_Image_2026-06-28_at_8.23.41_PM_1_ndes6x.jpg",
@@ -22,7 +22,7 @@ const cloudinaryImages = {
   relojSilver1: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932185/WhatsApp_Image_2026-06-29_at_7.23.07_PM_2_gqv1ep.jpg",
   relojSilver2: "https://res.cloudinary.com/dwifi7niu/image/upload/v1782932184/WhatsApp_Image_2026-06-29_at_7.23.07_PM_1_gjpudq.jpg",
 };
-const logoAyre = cloudinaryImages.logo;
+const logoAyre = images.logo;
 
 function cssImageUrl(imageUrl) {
   return `url("${imageUrl}")`;
@@ -57,7 +57,7 @@ const fallbackProducts = [
 
 const productImages = Object.fromEntries(fallbackProducts.map((product) => [product.id, product.image]));
 const categories = ["Todos", "Conjuntos", "Camisetas", "Selecciones", "Clubes", "Accesorios"];
-const appVersion = "1.5.4";
+const appVersion = "1.5.5";
 const apiUrl = import.meta.env.VITE_API_URL || "/api";
 const formatter = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const availableSizes = ["4", "6", "8", "10", "12", "14", "S", "M", "L", "XL"];
@@ -838,7 +838,7 @@ export default function App() {
       <main id={isAdminRoute ? "admin" : isRegisterRoute ? "registro" : isAccountRoute ? "cuenta" : "inicio"}>
         {!isAdminRoute && !isRegisterRoute && !isAccountRoute && (
           <>
-        <section className="hero" style={{ "--hero-image": cssImageUrl(cloudinaryImages.hero) }}>
+        <section className="hero" style={{ "--hero-image": cssImageUrl(images.heroDesktop), "--hero-mobile-image": cssImageUrl(images.heroMobile) }}>
           <div className="hero-copy">
             <p className="eyebrow">AyRe indumentaria</p>
             <h1>Prendas y accesorios para tu estilo diario</h1>
@@ -902,13 +902,13 @@ export default function App() {
         </section>
 
         <section className="category-showcase" aria-label="Categorias destacadas">
-          <button className="category-tile large" type="button" style={{ "--tile-image": cssImageUrl(cloudinaryImages.camisetaArgentina10) }} onClick={() => openMobileCategory("Camisetas")}>
+          <button className="category-tile large" type="button" style={{ "--tile-image": cssImageUrl(images.categories.camisetas) }} onClick={() => openMobileCategory("Camisetas")}>
             <span>Camisetas mundialistas</span>
           </button>
-          <button className="category-tile" type="button" style={{ "--tile-image": cssImageUrl(cloudinaryImages.conjuntoBocaAzul) }} onClick={() => openMobileCategory("Conjuntos")}>
+          <button className="category-tile" type="button" style={{ "--tile-image": cssImageUrl(images.categories.conjuntos) }} onClick={() => openMobileCategory("Conjuntos")}>
             <span>Conjuntos deportivos</span>
           </button>
-          <button className="category-tile" type="button" style={{ "--tile-image": cssImageUrl(cloudinaryImages.camisetaArgentinaNegra) }} onClick={() => openMobileCategory("Selecciones")}>
+          <button className="category-tile" type="button" style={{ "--tile-image": cssImageUrl(images.categories.selecciones) }} onClick={() => openMobileCategory("Selecciones")}>
             <span>Selecciones</span>
           </button>
         </section>
