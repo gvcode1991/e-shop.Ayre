@@ -11,6 +11,11 @@ import { ProductGrid } from "./components/products/ProductGrid";
 import { images } from "./config/images";
 import { appVersion, categories, freeShippingThreshold, shippingCost } from "./config/storeConfig";
 import { useSavedCart } from "./hooks/useSavedCart";
+import { loginAdmin } from "./services/adminApi";
+import { createOrder } from "./services/ordersApi";
+import { createProduct, deleteProduct, loadProducts as loadProductsRequest, updateProduct } from "./services/productsApi";
+import { uploadProductImage as uploadProductImageRequest } from "./services/uploadsApi";
+import { getUserAccount, loginUser, registerUser, updateFavorite, updatePreferences } from "./services/usersApi";
 import { formatter } from "./utils/formatters";
 import { getProductSizes, normalizeStock, parseListText, parseStockText, stockToText, stockTotal } from "./utils/stock";
 
@@ -66,7 +71,6 @@ const fallbackProducts = [
 }));
 
 const productImages = Object.fromEntries(fallbackProducts.map((product) => [product.id, product.image]));
-const apiUrl = import.meta.env.VITE_API_URL || "/api";
 const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "5491123456789";
 const emptyCheckout = {
   name: "",
@@ -147,8 +151,7 @@ export default function App() {
 
   async function loadProducts() {
     try {
-      const response = await fetch(`${apiUrl}/products`);
-      const data = await response.json();
+      const { response, data } = await loadProductsRequest();
 
       if (!response.ok) {
         throw new Error(data.message || "No pudimos cargar el catalogo.");
@@ -305,12 +308,7 @@ export default function App() {
     setUserStatus({ state: "loading", message: "Guardando cuenta..." });
 
     try {
-      const response = await fetch(`${apiUrl}/users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userForm),
-      });
-      const data = await response.json();
+      const { response, data } = await registerUser(userForm);
 
       if (!response.ok) {
         throw new Error(data.message || "No pudimos registrar el usuario.");
@@ -336,12 +334,7 @@ export default function App() {
     setUserStatus({ state: "loading", message: "Iniciando sesion..." });
 
     try {
-      const response = await fetch(`${apiUrl}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(accountLookup),
-      });
-      const data = await response.json();
+      const { response, data } = await loginUser(accountLookup);
 
       if (!response.ok) {
         throw new Error(data.message || "No pudimos iniciar sesion.");
@@ -369,12 +362,7 @@ export default function App() {
     setUserStatus({ state: "loading", message: "Guardando preferencias..." });
 
     try {
-      const response = await fetch(`${apiUrl}/users/${encodeURIComponent(userAccount.email)}/preferences`, {
-        method: "PUT",
-        headers: authHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ acceptsMarketing }),
-      });
-      const data = await response.json();
+      const { response, data } = await updatePreferences(userAccount.email, { acceptsMarketing }, { headers: authHeaders() });
 
       if (!response.ok) {
         throw new Error(data.message || "No pudimos guardar las preferencias.");
@@ -398,12 +386,7 @@ export default function App() {
     const isFavorite = !(userAccount.favorites || []).includes(productId);
 
     try {
-      const response = await fetch(`${apiUrl}/users/${encodeURIComponent(userAccount.email)}/favorites/${productId}`, {
-        method: "PUT",
-        headers: authHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ isFavorite }),
-      });
-      const data = await response.json();
+      const { response, data } = await updateFavorite(userAccount.email, productId, { isFavorite }, { headers: authHeaders() });
 
       if (!response.ok) {
         throw new Error(data.message || "No pudimos actualizar favoritos.");
@@ -438,12 +421,7 @@ export default function App() {
     setAdminStatus({ state: "loading", message: "Iniciando sesion admin..." });
 
     try {
-      const response = await fetch(`${apiUrl}/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(adminLogin),
-      });
-      const data = await response.json();
+      const { response, data } = await loginAdmin(adminLogin);
 
       if (!response.ok) {
         throw new Error(data.message || "Credenciales admin incorrectas.");
@@ -503,12 +481,7 @@ export default function App() {
     setImageUpload((currentUpload) => ({ ...currentUpload, status: "loading", message: "Subiendo imagen a Cloudinary..." }));
 
     try {
-      const response = await fetch(`${apiUrl}/uploads/products`, {
-        method: "POST",
-        headers: adminHeaders(),
-        body: formData,
-      });
-      const data = await response.json();
+      const { response, data } = await uploadProductImageRequest(formData, { headers: adminHeaders() });
 
       if (!response.ok) {
         throw new Error(data.message || "No pudimos subir la imagen.");
@@ -568,12 +541,9 @@ export default function App() {
     };
 
     try {
-      const response = await fetch(`${apiUrl}/products${editingProductId ? `/${editingProductId}` : ""}`, {
-        method: editingProductId ? "PUT" : "POST",
-        headers: adminHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify(payload),
-      });
-      const data = response.status === 204 ? {} : await response.json();
+      const { response, data } = editingProductId
+        ? await updateProduct(editingProductId, payload, { headers: adminHeaders() })
+        : await createProduct(payload, { headers: adminHeaders() });
 
       if (!response.ok) {
         throw new Error(data.message || "No pudimos guardar el producto.");
@@ -603,10 +573,9 @@ export default function App() {
     setAdminStatus({ state: "loading", message: "Eliminando producto..." });
 
     try {
-      const response = await fetch(`${apiUrl}/products/${productId}`, { method: "DELETE", headers: adminHeaders() });
+      const { response, data } = await deleteProduct(productId, { headers: adminHeaders() });
 
       if (!response.ok) {
-        const data = await response.json();
         throw new Error(data.message || "No pudimos eliminar el producto.");
       }
 
@@ -670,21 +639,17 @@ export default function App() {
     setCheckoutStatus({ state: "loading", message: "Estamos preparando tu pedido..." });
 
     try {
-      const response = await fetch(`${apiUrl}/orders`, {
-        method: "POST",
-        headers: authHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({
-          customer: checkout,
-          items: cartLines.map((item) => ({ id: item.id, quantity: item.quantity, size: item.size, color: item.color })),
-          totals: {
-            subtotal: cartSubtotal,
-            shipping: currentShippingCost,
-            total: cartTotal,
-          },
-        }),
+      const { response, data } = await createOrder({
+        customer: checkout,
+        items: cartLines.map((item) => ({ id: item.id, quantity: item.quantity, size: item.size, color: item.color })),
+        totals: {
+          subtotal: cartSubtotal,
+          shipping: currentShippingCost,
+          total: cartTotal,
+        },
+      }, {
+        headers: authHeaders(),
       });
-
-      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.message || "No pudimos crear el pedido.");
@@ -698,9 +663,8 @@ export default function App() {
       }
       setCheckoutStatus({ state: "success", message: `Pedido recibido: ${data.order.id}. Carrito vaciado y stock actualizado.` });
       if (checkout.email && userAccount?.email === checkout.email.toLowerCase()) {
-        const userResponse = await fetch(`${apiUrl}/users/${encodeURIComponent(userAccount.email)}`, { headers: authHeaders() });
+        const { response: userResponse, data: userData } = await getUserAccount(userAccount.email, { headers: authHeaders() });
         if (userResponse.ok) {
-          const userData = await userResponse.json();
           setUserAccount(userData.user);
         }
       }
