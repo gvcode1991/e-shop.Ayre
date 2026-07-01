@@ -11,13 +11,13 @@ import { uploadProductImage } from "./services/cloudinaryService.js";
 import { sendAccountConfirmationEmail, isEmailConfigured, verifyEmailConnection } from "./services/emailService.js";
 import { createAdminSessionToken, createSessionToken, verifySessionToken } from "./services/authService.js";
 import { attachPurchaseToUser, authenticateUser, confirmUserEmail, getUserByEmail, isVerifiedUserEmail, listUsers, registerUser, setFavorite, updateUserPreferences, updateUserRole } from "./services/usersService.js";
+import { isWhatsAppAutomationConfigured, notifyAdminOrder } from "./services/whatsappService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const clientDistPath = path.resolve(__dirname, "../dist");
 const freeShippingThreshold = 60000;
 const shippingCost = 4500;
-const adminWhatsappNumber = process.env.ADMIN_WHATSAPP_NUMBER || process.env.VITE_WHATSAPP_NUMBER || "";
 const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
 const rateLimitStore = new Map();
 const upload = multer({
@@ -56,6 +56,7 @@ export function createApp() {
       health.mongoConfigured = Boolean(process.env.MONGODB_URI);
       health.cloudinaryConfigured = Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
       health.emailConfigured = isEmailConfigured();
+      health.whatsappConfigured = isWhatsAppAutomationConfigured();
       health.mongoState = mongoose.connection.readyState;
     }
 
@@ -404,10 +405,12 @@ export function createApp() {
       }
 
       await decrementProductStock(orderItems);
+      const adminWhatsApp = await notifyAdminOrder(result.order);
 
       response.status(201).json({
         ...result,
-        adminWhatsAppUrl: buildAdminWhatsAppUrl(result.order),
+        adminWhatsApp,
+        adminWhatsAppUrl: adminWhatsApp.sent ? "" : adminWhatsApp.fallbackUrl,
       });
     } catch (error) {
       next(error);
@@ -529,25 +532,4 @@ function requireSameUser(request, response, next) {
   }
 
   next();
-}
-
-function buildAdminWhatsAppUrl(order) {
-  if (!adminWhatsappNumber || !order) {
-    return "";
-  }
-
-  const lines = [
-    `Nuevo pedido AyRe: ${order.id}`,
-    `Cliente: ${order.customer?.name || ""}`,
-    `Telefono: ${order.customer?.phone || ""}`,
-    `Email: ${order.customer?.email || ""}`,
-    `Entrega: ${order.fulfillment?.delivery || ""}${order.fulfillment?.address ? ` - ${order.fulfillment.address}` : ""}`,
-    `Pago: ${order.payment || ""}`,
-    "Productos:",
-    ...(order.items || []).map((item) => `- ${item.name} talle ${item.size}${item.color ? ` color ${item.color}` : ""} x${item.quantity}`),
-    `Total: $ ${Number(order.total || 0).toLocaleString("es-AR")}`,
-    order.notes ? `Notas: ${order.notes}` : "",
-  ].filter(Boolean);
-
-  return `https://wa.me/${adminWhatsappNumber}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
