@@ -3,7 +3,7 @@ import React from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import logoAyre from "../assets/logo-ayre-nav.png";
-import heroImage from "../assets/camiseta-argentina-10.jpg";
+import heroImage from "../assets/hero-ayre.jpg";
 import bocaSet from "../assets/set-boca-nino.jpg";
 import bocaTrack from "../assets/conjunto-boca-azul.jpg";
 import riverSet from "../assets/set-river-nino.jpg";
@@ -823,9 +823,9 @@ export default function App() {
           <>
         <section className="hero" style={{ "--hero-image": `url(${heroImage})` }}>
           <div className="hero-copy">
-            <p className="eyebrow">Mundial style drops</p>
-            <h1>Indumentaria para jugar y alentar</h1>
-            <p className="hero-text">Camisetas, conjuntos y equipos de clubes y selecciones con una tienda lista para crecer.</p>
+            <p className="eyebrow">AyRe indumentaria</p>
+            <h1>Estilo deportivo para todos los dias</h1>
+            <p className="hero-text">Remeras de selecciones, conjuntos deportivos y relojes seleccionados para completar tu look.</p>
             <div className="hero-actions">
               <a className="primary-action" href="#productos">Ver catalogo</a>
               <a className="secondary-action" href="#coleccion">Conocer AyRe</a>
