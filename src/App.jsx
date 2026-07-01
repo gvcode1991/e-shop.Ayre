@@ -1,4 +1,4 @@
-import { Edit3, Heart, Home, Menu, Minus, Plus, Save, Search, ShoppingBag, Trash2, UserRound, X } from "lucide-react";
+import { Edit3, Facebook, Heart, Home, Instagram, Menu, MessageCircle, Minus, Plus, Save, Search, ShoppingBag, Trash2, UserRound, X } from "lucide-react";
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -777,6 +777,10 @@ export default function App() {
             <img src={logoAyre} alt="AyRe" />
           </a>
 
+          <button className="mobile-search-button" type="button" aria-label="Buscar productos" onClick={() => navigateToSection("/", "productos")}>
+            <Search size={24} />
+          </button>
+
           <label className="header-search">
             <Search size={24} />
             <input value={query} onChange={(event) => setQuery(event.target.value)} type="search" placeholder="Buscar camisetas, conjuntos, clubes..." />
@@ -868,6 +872,18 @@ export default function App() {
           <div><span>01</span><strong>Clubes y selecciones</strong><p>Modelos elegidos para chicos, entrenamiento y uso urbano.</p></div>
           <div><span>02</span><strong>Stock visible</strong><p>Catalogo preparado para sumar talles, colores y variantes.</p></div>
           <div><span>03</span><strong>Compra simple</strong><p>Carrito persistente y estructura lista para futuro checkout.</p></div>
+        </section>
+
+        <section className="category-showcase" aria-label="Categorias destacadas">
+          <button className="category-tile large" type="button" style={{ "--tile-image": `url(${argentinaHome})` }} onClick={() => openMobileCategory("Camisetas")}>
+            <span>Camisetas mundialistas</span>
+          </button>
+          <button className="category-tile" type="button" style={{ "--tile-image": `url(${bocaTrack})` }} onClick={() => openMobileCategory("Conjuntos")}>
+            <span>Conjuntos deportivos</span>
+          </button>
+          <button className="category-tile" type="button" style={{ "--tile-image": `url(${argentinaBlack})` }} onClick={() => openMobileCategory("Selecciones")}>
+            <span>Selecciones</span>
+          </button>
         </section>
 
         <section className="home-carousel" aria-label="Productos destacados en inicio">
@@ -1152,12 +1168,38 @@ export default function App() {
       </main>
 
       <footer className="site-footer">
+        <div className="footer-links">
+          <details>
+            <summary>Navegacion</summary>
+            <a href="#productos">Catalogo</a>
+            <a href="#coleccion">Coleccion</a>
+            <a href="/cuenta" onClick={(event) => { event.preventDefault(); navigateTo("/cuenta"); }}>Mi cuenta</a>
+          </details>
+          <details>
+            <summary>Contactanos</summary>
+            <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noreferrer">WhatsApp</a>
+            <a href="mailto:ventas@ayre.com.ar">ventas@ayre.com.ar</a>
+          </details>
+        </div>
+
+        <div className="footer-social" aria-label="Redes sociales">
+          <a href="https://www.instagram.com/" target="_blank" rel="noreferrer" aria-label="Instagram de AyRe"><Instagram size={25} /></a>
+          <a href="https://www.facebook.com/" target="_blank" rel="noreferrer" aria-label="Facebook de AyRe"><Facebook size={25} /></a>
+        </div>
+
         <a className="footer-brand" href="#inicio" aria-label="AyRe inicio">
           <img src={logoAyre} alt="AyRe" />
         </a>
-        <p>Copyright (c) 2026 AyRe. Todos los derechos reservados.</p>
-        <span className="version-mark">v{appVersion}</span>
+
+        <div className="footer-legal">
+          <p>Copyright AyRe - 2026. Todos los derechos reservados.</p>
+          <span className="version-mark">v{appVersion}</span>
+        </div>
       </footer>
+
+      <a className="floating-whatsapp" href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noreferrer" aria-label="Contactar por WhatsApp">
+        <MessageCircle size={30} />
+      </a>
 
       <aside className={`cart-panel ${isCartOpen ? "is-open" : ""}`} aria-label="Carrito" aria-hidden={!isCartOpen}>
         <div className="cart-header">
