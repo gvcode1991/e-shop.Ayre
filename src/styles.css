@@ -36,9 +36,9 @@ a { color: inherit; text-decoration: none; }
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(246, 238, 230, 0.96);
-  border-bottom: 1px solid rgba(155, 115, 80, 0.18);
-  box-shadow: 0 10px 34px rgba(50, 37, 27, 0.06);
+  background: rgba(255, 255, 255, 0.98);
+  border-bottom: 1px solid rgba(36, 25, 19, 0.08);
+  box-shadow: 0 10px 30px rgba(50, 37, 27, 0.05);
   backdrop-filter: blur(16px);
 }
 
@@ -59,19 +59,22 @@ a { color: inherit; text-decoration: none; }
 
 .header-main {
   display: grid;
-  grid-template-columns: minmax(150px, 240px) minmax(320px, 620px) minmax(280px, 410px);
+  grid-template-columns: 40px 40px minmax(180px, 1fr) 40px 44px;
+  grid-template-areas: "menu mobile-search brand account cart";
   align-items: center;
-  justify-content: center;
-  gap: clamp(24px, 4vw, 56px);
-  min-height: 104px;
-  padding: 18px clamp(20px, 5vw, 82px);
+  justify-content: stretch;
+  gap: 8px;
+  min-height: 72px;
+  padding: 10px clamp(18px, 4vw, 56px);
+  overflow: hidden;
 }
 
 .brand {
-  justify-self: start;
+  grid-area: brand;
+  justify-self: center;
   display: inline-flex;
   width: auto;
-  height: 58px;
+  height: 50px;
   align-items: center;
   gap: 9px;
   padding: 3px;
@@ -80,8 +83,8 @@ a { color: inherit; text-decoration: none; }
   border-radius: 0;
 }
 .brand-mark {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   object-fit: cover;
   object-position: center 30%;
   border-radius: 999px;
@@ -89,13 +92,13 @@ a { color: inherit; text-decoration: none; }
 .brand-name {
   color: #6f5a48;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.58rem;
+  font-size: 1.32rem;
   font-weight: 400;
   line-height: 1;
 }
 
 .header-search {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 16px;
   min-height: 52px;
@@ -119,7 +122,7 @@ a { color: inherit; text-decoration: none; }
 
 .header-actions {
   justify-self: end;
-  display: flex;
+  display: none;
   align-items: center;
   gap: clamp(18px, 2vw, 28px);
 }
@@ -155,7 +158,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 .main-nav {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   gap: clamp(16px, 3vw, 34px);
@@ -170,16 +173,16 @@ a { color: inherit; text-decoration: none; }
 .icon-action {
   position: relative;
   display: inline-flex;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--line);
+  border: 1px solid transparent;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.76);
-  color: var(--clay);
+  background: transparent;
+  color: var(--ink);
   cursor: pointer;
-  box-shadow: 0 12px 30px rgba(50, 37, 27, 0.07);
+  box-shadow: none;
 }
 .menu-button { grid-area: menu; justify-self: start; }
 .mobile-account-button { grid-area: account; justify-self: center; }
@@ -188,12 +191,13 @@ a { color: inherit; text-decoration: none; }
 .menu-button,
 .cart-button,
 .mobile-search-button,
-.mobile-account-button { display: none; }
+.mobile-account-button { display: inline-flex; }
 .mobile-search-button,
 .mobile-account-button {
-  width: 44px;
-  height: 44px;
-  place-items: center;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
   border: 0;
   background: transparent;
   color: var(--ink);
@@ -201,17 +205,17 @@ a { color: inherit; text-decoration: none; }
 }
 .cart-button strong {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: -3px;
+  right: -4px;
   display: grid;
-  min-width: 24px;
-  height: 24px;
+  min-width: 18px;
+  height: 18px;
   place-items: center;
   border: 2px solid white;
   border-radius: 999px;
-  background: var(--clay);
+  background: #625349;
   color: white;
-  font-size: 0.75rem;
+  font-size: 0.64rem;
   font-weight: 700;
 }
 
@@ -1150,14 +1154,8 @@ h2 { margin-bottom: 0; font-size: clamp(1.9rem, 3.5vw, 3.15rem); font-weight: 62
 
 @media (max-width: 1080px) {
   .header-main {
-    grid-template-columns: minmax(120px, 170px) minmax(280px, 1fr) minmax(220px, 320px);
-    gap: 22px;
-  }
-  .header-actions { gap: 16px; }
-  .header-actions a,
-  .header-cart {
-    min-width: 48px;
-    font-size: 0.78rem;
+    grid-template-columns: 38px 38px minmax(150px, 1fr) 38px 42px;
+    gap: 6px;
   }
   .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
