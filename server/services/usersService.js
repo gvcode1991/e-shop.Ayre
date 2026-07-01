@@ -50,6 +50,29 @@ export async function registerUser(userData) {
   return { ...savedUser.toJSON(), confirmationToken };
 }
 
+export async function deletePendingUser(email) {
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!normalizedEmail) {
+    return false;
+  }
+
+  const database = await connectToDatabase();
+
+  if (!database.connected) {
+    const user = memoryUsers.get(normalizedEmail);
+
+    if (!user || user.emailVerified) {
+      return false;
+    }
+
+    return memoryUsers.delete(normalizedEmail);
+  }
+
+  const result = await User.deleteOne({ email: normalizedEmail, emailVerified: false });
+  return result.deletedCount > 0;
+}
+
 export async function authenticateUser(email, password) {
   const normalizedEmail = normalizeEmail(email);
   const database = await connectToDatabase();

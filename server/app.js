@@ -10,7 +10,7 @@ import { createProduct, decrementProductStock, deleteProduct, getAvailableStock,
 import { uploadProductImage } from "./services/cloudinaryService.js";
 import { sendAccountConfirmationEmail, isEmailConfigured, verifyEmailConnection } from "./services/emailService.js";
 import { createAdminSessionToken, createSessionToken, verifySessionToken } from "./services/authService.js";
-import { attachPurchaseToUser, authenticateUser, confirmUserEmail, getUserByEmail, isVerifiedUserEmail, listUsers, registerUser, setFavorite, updateUserPreferences, updateUserRole } from "./services/usersService.js";
+import { attachPurchaseToUser, authenticateUser, confirmUserEmail, deletePendingUser, getUserByEmail, isVerifiedUserEmail, listUsers, registerUser, setFavorite, updateUserPreferences, updateUserRole } from "./services/usersService.js";
 import { notifyAdminOrder } from "./services/whatsappService.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -210,21 +210,15 @@ export function createApp() {
         return;
       }
 
-      let email;
-
       try {
-        email = await sendAccountConfirmationEmail(user, user.confirmationToken);
+        const email = await sendAccountConfirmationEmail(user, user.confirmationToken);
+        const { confirmationToken, ...publicUser } = user;
+        response.status(201).json({ user: publicUser, email, token: createSessionToken(publicUser) });
       } catch (error) {
         console.warn(`No pudimos enviar el email de activacion: ${error.message}`);
-        email = {
-          sent: false,
-          reason: "send-failed",
-          message: "Cuenta creada, pero no pudimos enviar el email de activacion. Revisa Resend en Render.",
-        };
+        await deletePendingUser(user.email);
+        response.status(502).json({ message: getEmailFailureMessage(error) });
       }
-
-      const { confirmationToken, ...publicUser } = user;
-      response.status(201).json({ user: publicUser, email, token: createSessionToken(publicUser) });
     } catch (error) {
       next(error);
     }
@@ -531,4 +525,21 @@ function requireSameUser(request, response, next) {
   }
 
   next();
+}
+
+function getEmailFailureMessage(error) {
+  const providerMessage = String(error?.message || "");
+  const lowerMessage = providerMessage.toLowerCase();
+  const looksLikeResendTestLimit =
+    error?.status === 403 ||
+    lowerMessage.includes("domain") ||
+    lowerMessage.includes("verify") ||
+    lowerMessage.includes("verified") ||
+    lowerMessage.includes("testing");
+
+  if (looksLikeResendTestLimit) {
+    return "No pudimos enviar el email de activacion. Con Resend en modo prueba/onboarding solo puede funcionar con emails permitidos por la cuenta. Para registrar clientes reales, verifica un dominio propio en Resend o usa el email de prueba autorizado.";
+  }
+
+  return "No pudimos enviar el email de activacion. La cuenta no se guardo; revisa Resend en Render y proba nuevamente.";
 }
