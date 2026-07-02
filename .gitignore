@@ -2,6 +2,7 @@
 Thumbs.db
 node_modules/
 .npm-cache/
+.vite-cache/
 dist/
 build/
 .env

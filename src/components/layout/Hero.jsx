@@ -1,3 +1,5 @@
+import React from "react";
+
 export function Hero({ cssImageUrl, images }) {
   return (
     <section className="hero" style={{ "--hero-image": cssImageUrl(images.heroDesktop), "--hero-mobile-image": cssImageUrl(images.heroMobile) }}>

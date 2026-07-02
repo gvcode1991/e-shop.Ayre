@@ -1,3 +1,5 @@
+import React from "react";
+
 export function CheckoutForm({ checkout, submitOrder, updateCheckout }) {
   return (
     <form className="checkout-form staged-form" onSubmit={submitOrder}>

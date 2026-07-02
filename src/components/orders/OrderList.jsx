@@ -1,3 +1,4 @@
+import React from "react";
 import { formatter } from "../../utils/formatters";
 
 export function OrderList({ purchases }) {

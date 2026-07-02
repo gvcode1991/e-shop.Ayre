@@ -1,3 +1,4 @@
+import React from "react";
 import { Heart, Home, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
 
 export function Header({

@@ -1,3 +1,4 @@
+import React from "react";
 import { Heart } from "lucide-react";
 
 import { formatter } from "../../utils/formatters";

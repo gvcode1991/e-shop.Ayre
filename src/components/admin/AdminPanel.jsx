@@ -1,3 +1,4 @@
+import React from "react";
 import { AdminProductsList } from "./AdminProductsList";
 import { ProductForm } from "./ProductForm";
 

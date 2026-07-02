@@ -1,3 +1,4 @@
+import React from "react";
 import { Minus, Plus, X } from "lucide-react";
 
 import { CheckoutForm } from "../checkout/CheckoutForm";
