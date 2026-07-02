@@ -1,4 +1,5 @@
-User-agent: *
+﻿User-agent: *
 Allow: /
 
-Sitemap: https://e-shop-ayre.onrender.com/sitemap.xml
+# Replace this URL with your production domain before going live.
+Sitemap: https://your-domain.com/sitemap.xml

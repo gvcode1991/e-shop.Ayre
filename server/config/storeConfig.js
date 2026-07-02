@@ -1,9 +1,9 @@
-function slugStoreName() {
+﻿function slugStoreName() {
   return getStoreName().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 export function getStoreName() {
-  return process.env.STORE_NAME || "AyRe";
+  return process.env.STORE_NAME || "Demo Store";
 }
 
 export function getServiceName() {
@@ -25,3 +25,4 @@ export function getCloudinaryFolder() {
 export function getDefaultAppSecret() {
   return `${slugStoreName()}-dev-secret-change-me`;
 }
+

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Save } from "lucide-react";
 
 import { adminContent, categories } from "../../config/storeConfig";
@@ -20,7 +20,7 @@ export function ProductForm({
       <div className="admin-grid">
         <label>
           Codigo
-          <input value={productForm.id} onChange={(event) => updateProductForm("id", event.target.value)} type="text" placeholder="camiseta-argentina-10" disabled={Boolean(editingProductId)} />
+          <input value={productForm.id} onChange={(event) => updateProductForm("id", event.target.value)} type="text" placeholder="basic-t-shirt" disabled={Boolean(editingProductId)} />
         </label>
         <label>
           Nombre
@@ -94,3 +94,4 @@ export function ProductForm({
     </form>
   );
 }
+

@@ -1,72 +1,72 @@
-import { productFallbackImages } from "./images";
+﻿import { productFallbackImages } from "./images";
 
-export const appVersion = "1.6.0";
+export const appVersion = "1.0.0";
 
 export const storageKeys = {
-  cart: "ayre-cart",
-  userToken: "ayre-user-token",
-  adminToken: "ayre-admin-token",
+  cart: "ecommerce-template-cart",
+  userToken: "ecommerce-template-user-token",
+  adminToken: "ecommerce-template-admin-token",
 };
 
 export const storeInfo = {
-  name: "AyRe",
-  legalName: "AyRe",
-  slogan: "Prendas y accesorios para tu estilo diario",
-  shortDescription: "Remeras de selecciones, conjuntos deportivos y relojes seleccionados para completar tu look.",
-  contactEmail: "ventas@ayre.com.ar",
-  whatsappFallback: "5491123456789",
+  name: "Demo Store",
+  legalName: "Demo Store",
+  slogan: "Products for your everyday store",
+  shortDescription: "A reusable catalog with apparel, accessories and sample products ready to customize.",
+  contactEmail: "sales@example.com",
+  whatsappFallback: "5490000000000",
   instagramUrl: "https://www.instagram.com/",
   facebookUrl: "https://www.facebook.com/",
-  storeLocationText: "Tienda online con envios a todo el pais",
+  storeLocationText: "Online store ready for nationwide shipping",
 };
 
 export const heroContent = {
-  eyebrow: "AyRe indumentaria",
+  eyebrow: "Store collection",
   title: storeInfo.slogan,
   description: storeInfo.shortDescription,
-  primaryAction: "Ver catalogo",
-  secondaryAction: `Conocer ${storeInfo.name}`,
+  primaryAction: "View catalog",
+  secondaryAction: `About ${storeInfo.name}`,
 };
 
-export const categories = ["Todos", "Conjuntos", "Camisetas", "Selecciones", "Clubes", "Accesorios"];
+export const categories = ["Todos", "Apparel", "Accessories", "Featured"];
 export const visibleCategoryShortcuts = [
   { label: "Catalogo completo", value: "Todos" },
-  { label: "Remeras de selecciones", value: "Selecciones" },
-  { label: "Conjuntos deportivos", value: "Conjuntos" },
-  { label: "Relojes y accesorios", value: "Accesorios" },
+  { label: "Apparel essentials", value: "Apparel" },
+  { label: "Accessories", value: "Accessories" },
+  { label: "Featured products", value: "Featured" },
 ];
 
 export const showcaseCategories = [
-  { label: "Camisetas mundialistas", value: "Camisetas", imageKey: "camisetas", featured: true },
-  { label: "Conjuntos deportivos", value: "Conjuntos", imageKey: "conjuntos" },
-  { label: "Selecciones", value: "Selecciones", imageKey: "selecciones" },
+  { label: "Apparel essentials", value: "Apparel", imageKey: "apparel", featured: true },
+  { label: "Accessories", value: "Accessories", imageKey: "accessories" },
+  { label: "Featured products", value: "Featured", imageKey: "featured" },
 ];
 
 export const introHighlights = [
-  { number: "01", title: "Remeras de selecciones", text: "Modelos elegidos para vestir comodo, sumar identidad y armar looks casuales." },
-  { number: "02", title: "Conjuntos deportivos", text: "Prendas practicas para uso diario, entrenar o moverte con estilo." },
-  { number: "03", title: "Accesorios y relojes", text: "Detalles seleccionados para completar tu outfit y renovar tu coleccion." },
+  { number: "01", title: "Flexible catalog", text: "Sections ready to adapt to apparel, accessories or any retail category." },
+  { number: "02", title: "Visible stock", text: "Products support sizes, colors, images and availability from the admin panel." },
+  { number: "03", title: "Simple checkout", text: "Cart, customer data and order confirmation are prepared for real stores." },
 ];
 
-export const shippingTickerItems = ["Envios a todo el pais", "Medios de pago disponibles", "Envios a todo el pais", "Medios de pago disponibles"];
+export const shippingTickerItems = ["Shipping options available", "Payment methods ready", "Shipping options available", "Payment methods ready"];
 
 export const homeCarouselContent = {
-  eyebrow: "Nuevos ingresos",
-  title: "Lo mas buscado",
-  viewAllText: "Ver todo",
+  eyebrow: "New arrivals",
+  title: "Featured products",
+  viewAllText: "View all",
 };
 
 export const catalogContent = {
-  eyebrow: "Catalogo",
-  title: "Productos destacados",
+  eyebrow: "Catalog",
+  title: "Products",
   emptyMessage: "No encontramos productos con esos filtros.",
 };
 
 export const contactSection = {
-  eyebrow: "Envios",
-  title: "Compras desde cualquier punto del pais",
-  description: "Preparamos tu pedido y coordinamos la entrega por WhatsApp para que recibas tus prendas y accesorios de forma simple.",
-  note: "Despacho coordinado y seguimiento del pedido.",
+  eyebrow: "Shipping",
+  title: "Orders ready to coordinate",
+  description: "Prepare orders, coordinate delivery and keep customers informed from checkout.",
+  note: "Delivery and pickup texts can be customized from the store configuration.",
 };
 
 export const currencyConfig = {
@@ -78,10 +78,10 @@ export const availableSizes = ["4", "6", "8", "10", "12", "14", "S", "M", "L", "
 export const freeShippingThreshold = 60000;
 export const shippingCost = 4500;
 
-export const deliveryMethods = ["Retiro en tienda", "Envio a domicilio", "Coordinar por WhatsApp"];
+export const deliveryMethods = ["Retiro en tienda", "Envio a domicilio", "Coordinar entrega"];
 export const paymentMethods = ["Efectivo", "Transferencia", "Mercado Pago", "Coordinar"];
 export const paymentHelpText = {
-  Transferencia: "Al confirmar, guardamos el pedido y te pasamos los datos de transferencia por WhatsApp.",
+  Transferencia: "Al confirmar, guardamos el pedido y te pasamos los datos de transferencia.",
   "Mercado Pago": "Dejamos el pedido reservado y te enviamos el link de Mercado Pago para completar el pago.",
   Efectivo: "Pagas al retirar o al coordinar la entrega.",
   Coordinar: "Te contactamos para elegir el metodo de pago mas comodo.",
@@ -95,12 +95,12 @@ export const checkoutDefaults = {
 export const checkoutContent = {
   fields: {
     name: { label: "Nombre", placeholder: "Nombre y apellido" },
-    phone: { label: "Telefono", placeholder: "WhatsApp" },
+    phone: { label: "Telefono", placeholder: "Telefono de contacto" },
     email: { label: "Email registrado", placeholder: "tu@email.com" },
     delivery: { label: "Entrega" },
     address: { label: "Direccion", placeholder: "Calle, numero, localidad" },
     payment: { label: "Pago" },
-    notes: { label: "Comentarios", placeholder: "Nombre en camiseta, colores o cualquier detalle del pedido" },
+    notes: { label: "Comentarios", placeholder: "Talle, color o cualquier detalle del pedido" },
   },
   notifyLabel: "Enviarme confirmacion y novedades al email",
 };
@@ -181,7 +181,7 @@ export const adminContent = {
   newProductButton: "Nuevo producto",
   accessTitle: "Acceso admin",
   emailLabel: "Email admin",
-  emailPlaceholder: `admin@${storeInfo.name.toLowerCase()}.com`,
+  emailPlaceholder: "admin@example.com",
   passwordLabel: "Contrasena admin",
   passwordPlaceholder: "Contrasena privada",
   unlockButton: "Desbloquear panel",
@@ -197,28 +197,16 @@ export const adminContent = {
 };
 
 export const fallbackProducts = [
-  { id: "set-boca-nino", name: "Set Boca nino", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Camiseta, short y medias para chicos.", price: 42900, image: productFallbackImages.setBocaNino, badge: "Club" },
-  { id: "conjunto-boca-azul", name: "Conjunto Boca azul", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Campera con capucha y pantalon deportivo.", price: 54900, image: productFallbackImages.conjuntoBocaAzul, badge: "Nuevo" },
-  { id: "set-river-nino", name: "Set River nino", category: "Conjuntos", tags: ["Clubes", "River"], description: "Kit completo con camiseta, short y medias.", price: 42900, image: productFallbackImages.setRiverNino, badge: "Club" },
-  { id: "conjunto-boca-blanco", name: "Conjunto Boca blanco", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Campera clara y pantalon con detalles.", price: 54900, image: productFallbackImages.conjuntoBocaBlanco, badge: "Invierno" },
-  { id: "set-racing-nino", name: "Set Racing nino", category: "Conjuntos", tags: ["Clubes", "Racing"], description: "Kit completo celeste, blanco y azul.", price: 42900, image: productFallbackImages.setRacingNino, badge: "Club" },
-  { id: "set-al-nassr-nino", name: "Set Al Nassr nino", category: "Conjuntos", tags: ["Clubes", "Al Nassr"], description: "Kit amarillo con short y medias.", price: 42900, image: productFallbackImages.setAlNassrNino, badge: "Global" },
-  { id: "camiseta-argentina-10", name: "Camiseta Argentina 10", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Modelo titular con detalles dorados.", price: 34900, image: productFallbackImages.camisetaArgentina10, badge: "Seleccion" },
-  { id: "camiseta-argentina-negra", name: "Camiseta Argentina negra", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Modelo alternativo con graficas azules.", price: 34900, image: productFallbackImages.camisetaArgentinaNegra, badge: "Seleccion" },
-  { id: "camiseta-argentina-stock", name: "Camiseta Argentina stock", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Pack disponible con etiqueta.", price: 34900, image: productFallbackImages.camisetaArgentinaStock, badge: "Stock" },
-  { id: "camiseta-portugal-7", name: "Camiseta Portugal 7", category: "Camisetas", tags: ["Selecciones", "Portugal"], description: "Modelo rojo con detalles verdes.", price: 34900, image: productFallbackImages.camisetaPortugal7, badge: "Seleccion" },
-  { id: "reloj-negro", name: "Reloj negro", category: "Accesorios", tags: ["Relojes"], description: "Reloj negro para completar tu look diario.", price: 29900, image: productFallbackImages.relojNegro, badge: "Accesorio" },
-  { id: "reloj-gold", name: "Reloj gold", category: "Accesorios", tags: ["Relojes"], description: "Reloj dorado con terminacion elegante.", price: 29900, image: productFallbackImages.relojGold1, images: [productFallbackImages.relojGold1, productFallbackImages.relojGold2, productFallbackImages.relojGold3], badge: "Accesorio" },
-  { id: "reloj-silver", name: "Reloj silver", category: "Accesorios", tags: ["Relojes"], description: "Reloj plateado versatil para todos los dias.", price: 29900, image: productFallbackImages.relojSilver1, images: [productFallbackImages.relojSilver1, productFallbackImages.relojSilver2], badge: "Accesorio" },
+  { id: "basic-t-shirt", name: "Basic T-shirt", category: "Apparel", tags: ["Basics", "Tops"], description: "Soft everyday t-shirt for a reusable store catalog.", price: 24900, image: productFallbackImages.basicTShirt, badge: "New" },
+  { id: "urban-jacket", name: "Urban jacket", category: "Featured", tags: ["Outerwear", "Urban"], description: "Light jacket sample product ready to replace with real stock.", price: 54900, image: productFallbackImages.urbanJacket, badge: "Featured" },
+  { id: "daily-accessory", name: "Daily accessory", category: "Accessories", tags: ["Accessories"], description: "Accessory sample item for testing the checkout flow.", price: 19900, image: productFallbackImages.dailyAccessory, badge: "Accessory" },
 ].map((product) => ({
   ...product,
   images: product.images || [product.image],
   stock: [
-    { size: "8", quantity: 4 },
-    { size: "10", quantity: 4 },
-    { size: "12", quantity: 4 },
     { size: "S", quantity: 3 },
     { size: "M", quantity: 3 },
+    { size: "L", quantity: 3 },
   ],
   colors: [],
 }));
