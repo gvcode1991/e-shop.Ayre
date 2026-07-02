@@ -56,7 +56,7 @@ export default function App() {
 
 function AppContent() {
   const { images: storeImages, navigation: storeNavigation, storeConfig: storeSettings, themeConfig: activeThemeConfig } = useStoreContext();
-  const storeLogo = storeImages.logo;
+  const logoAyre = storeImages.logo;
   const activeStoreInfo = storeSettings.storeInfo;
   const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || activeStoreInfo.whatsappFallback;
   const activeHeroContent = storeSettings.heroContent;
@@ -227,7 +227,7 @@ function AppContent() {
       <Header
         cartQuantity={cartQuantity}
         headerActions={activeHeaderActions}
-        storeLogo={storeLogo}
+        logoAyre={logoAyre}
         mainNavLinks={activeMainNavLinks}
         navigateTo={navigateTo}
         navigateToSection={navigateToSection}
@@ -416,7 +416,7 @@ function AppContent() {
         </div>
 
         <a className="footer-brand" href="#inicio" aria-label={`${activeStoreInfo.name} inicio`}>
-          <img src={storeLogo} alt="" />
+          <img src={logoAyre} alt="" />
           <span>{activeStoreInfo.name}</span>
         </a>
 

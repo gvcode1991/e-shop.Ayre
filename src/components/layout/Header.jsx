@@ -4,7 +4,7 @@ import { Heart, Home, Menu, Search, ShoppingBag, UserRound } from "lucide-react"
 export function Header({
   cartQuantity,
   headerActions,
-  storeLogo,
+  logoAyre,
   mainNavLinks,
   navigateTo,
   navigateToSection,
@@ -27,7 +27,7 @@ export function Header({
         </button>
 
         <a className="brand" href="/" aria-label={`${storeInfo.name} inicio`} onClick={(event) => { event.preventDefault(); navigateTo("/"); }}>
-          <img className="brand-mark" src={storeLogo} alt="" />
+          <img className="brand-mark" src={logoAyre} alt="" />
           <span className="brand-name">{storeInfo.name}</span>
         </a>
 

@@ -1,8 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 
-import { getCloudinaryFolder } from "../config/storeConfig.js";
-
-const folder = getCloudinaryFolder();
+const folder = process.env.CLOUDINARY_FOLDER || "ayre-products";
 
 export function isCloudinaryConfigured() {
   return Boolean(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);

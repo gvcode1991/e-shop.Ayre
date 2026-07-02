@@ -1,6 +1,6 @@
-﻿services:
+services:
   - type: web
-    name: ecommerce-template-api
+    name: ayre-api
     runtime: node
     plan: free
     buildCommand: npm install && npm run build
@@ -10,8 +10,8 @@
       - key: NODE_ENV
         value: production
       - key: CLIENT_ORIGIN
-        value: https://your-store.onrender.com
+        value: https://e-shop-ayre.onrender.com
       - key: MONGODB_DB_NAME
-        value: ecommerce-template
+        value: ayre-shop
       - key: MONGODB_URI
         sync: false

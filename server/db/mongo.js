@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
 
-import { getMongoDbName } from "../config/storeConfig.js";
-
 let connectionPromise = null;
 const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
 
@@ -24,7 +22,7 @@ export async function connectToDatabase() {
 
   if (!connectionPromise) {
     connectionPromise = mongoose.connect(process.env.MONGODB_URI, {
-      dbName: getMongoDbName(),
+      dbName: process.env.MONGODB_DB_NAME || "ayre-shop",
       serverSelectionTimeoutMS: 8000,
     });
   }

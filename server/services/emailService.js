@@ -1,5 +1,3 @@
-import { getPublicAppUrl, getStoreName } from "../config/storeConfig.js";
-
 const resendApiUrl = "https://api.resend.com";
 
 function cleanEnvValue(value) {
@@ -68,8 +66,7 @@ export async function sendAccountConfirmationEmail(user, token) {
     return { sent: false, reason: "missing-resend" };
   }
 
-  const storeName = getStoreName();
-  const appUrl = getPublicAppUrl();
+  const appUrl = process.env.PUBLIC_APP_URL || "https://e-shop-ayre.onrender.com";
   const confirmUrl = `${appUrl}/api/users/confirm/${token}`;
   const response = await fetch(`${resendApiUrl}/emails`, {
     method: "POST",
@@ -77,11 +74,11 @@ export async function sendAccountConfirmationEmail(user, token) {
     body: JSON.stringify({
       from: getResendFrom(),
       to: user.email,
-      subject: `Confirma tu cuenta ${storeName}`,
-      text: `Hola ${user.name}, confirma tu cuenta para poder comprar en ${storeName}: ${confirmUrl}`,
+      subject: "Confirma tu cuenta AyRe",
+      text: `Hola ${user.name}, confirma tu cuenta para poder comprar en AyRe: ${confirmUrl}`,
       html: `
         <div style="font-family:Arial,sans-serif;line-height:1.5;color:#241913">
-          <h1>Confirma tu cuenta ${storeName}</h1>
+          <h1>Confirma tu cuenta AyRe</h1>
           <p>Hola ${user.name}, necesitamos confirmar tu email para activar tu cuenta y habilitar tus compras.</p>
           <p><a href="${confirmUrl}" style="display:inline-block;padding:12px 18px;border-radius:999px;background:#9b7350;color:white;text-decoration:none">Activar cuenta</a></p>
           <p>Si el boton no funciona, copia este enlace:</p>

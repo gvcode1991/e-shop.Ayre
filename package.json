@@ -1,6 +1,6 @@
 {
-  "name": "ecommerce-template",
-  "version": "1.0.0",
+  "name": "ayre-shop",
+  "version": "1.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -24,4 +24,3 @@
     "vite": "^6.0.7"
   }
 }
-

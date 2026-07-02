@@ -1,9 +1,20 @@
-﻿import { products as seedProducts } from "../data/products.js";
+import { cloudinaryImages, products as seedProducts } from "../data/products.js";
 import { connectToDatabase } from "../db/mongo.js";
 import { Product } from "../models/Product.js";
 
 const defaultStockSize = "Unico";
-const legacyImageUrls = {};
+const legacyImageUrls = {
+  "/assets/set-boca-nino.jpg": cloudinaryImages.setBocaNino,
+  "/assets/conjunto-boca-azul.jpg": cloudinaryImages.conjuntoBocaAzul,
+  "/assets/set-river-nino.jpg": cloudinaryImages.setRiverNino,
+  "/assets/conjunto-boca-blanco.jpg": cloudinaryImages.conjuntoBocaBlanco,
+  "/assets/set-racing-nino.jpg": cloudinaryImages.setRacingNino,
+  "/assets/set-al-nassr-nino.jpg": cloudinaryImages.setAlNassrNino,
+  "/assets/camiseta-argentina-10.jpg": cloudinaryImages.camisetaArgentina10,
+  "/assets/camiseta-argentina-negra.jpg": cloudinaryImages.camisetaArgentinaNegra,
+  "/assets/camiseta-argentina-stock.jpg": cloudinaryImages.camisetaArgentinaStock,
+  "/assets/camiseta-portugal-7.jpg": cloudinaryImages.camisetaPortugal7,
+};
 let memoryProducts = seedProducts.map((product) => normalizeProduct(product));
 
 export async function listProducts(filters = {}) {
@@ -301,4 +312,3 @@ function slugify(text) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 }
-

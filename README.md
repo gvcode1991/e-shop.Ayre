@@ -1,10 +1,10 @@
-﻿# E-commerce template
+# AyRe e-shop
 
-Base profesional reutilizable para crear tiendas online con React y Express. El proyecto queda preparado como punto de partida configurable: marca, textos, navegacion, imagenes, colores, variables sensibles y productos seed se pueden adaptar sin tocar los componentes principales.
+Tienda online para AyRe, desarrollada con React y Express. El proyecto combina un frontend responsive con catalogo, carrito, checkout y panel de administracion, mas una API conectada a MongoDB Atlas para productos, usuarios y pedidos.
 
 ## Caracteristicas
 
-- Catalogo de productos con busqueda, categorias y detalle de producto.
+- Catalogo de indumentaria y accesorios con busqueda, categorias y detalle de producto.
 - Carrito lateral con seleccion de talle/color, cantidades, pasos de compra y persistencia local.
 - Flujo de checkout con validaciones, registro de pedidos y actualizacion de stock.
 - Registro e inicio de sesion de usuarios, favoritos, preferencias y compras guardadas.
@@ -12,7 +12,7 @@ Base profesional reutilizable para crear tiendas online con React y Express. El 
 - Subida de imagenes de productos a Cloudinary desde el panel admin.
 - Emails transaccionales preparados con Resend.
 - Frontend responsive para mobile y desktop.
-- Configuracion centralizada de marca, navegacion, imagenes y textos para reutilizar la base en nuevas tiendas.
+- Configuracion centralizada de marca, navegacion, imagenes y textos para usar AyRe como base reutilizable.
 
 ## Stack
 
@@ -64,27 +64,10 @@ Usar `.env.example` como referencia para completar las variables necesarias:
 - Resend
 - JWT y claves privadas
 - URLs publicas de frontend/API
-- WhatsApp o telefono de administracion
-
-Los principales archivos para adaptar la tienda son:
-
-- `src/config/storeConfig.js`
-- `src/config/themeConfig.js`
-- `src/config/navigation.js`
-- `src/config/images.js`
-- `.env`
-
-## Documentation
-
-- `docs/INSTALL.md`
-- `docs/DEPLOY.md`
-- `docs/CUSTOMIZATION.md`
-- `docs/ARCHITECTURE.md`
-- `docs/ROADMAP.md`
-- `docs/CHECKLIST.md`
+- WhatsApp de administracion
 
 ## Version
 
-Version actual: `1.0.0`.
+Version actual: `1.6.0`.
 
-Esta version deja el proyecto preparado como release candidate del template reutilizable de e-commerce.
+Esta version consolida la estructura del frontend en contextos y hooks reutilizables para productos, admin, imagenes, checkout y usuarios, manteniendo la funcionalidad existente.
