@@ -1,6 +1,8 @@
 import React from "react";
 import { Save } from "lucide-react";
 
+import { categories } from "../../config/storeConfig";
+
 export function ProductForm({
   adminStatus,
   adminUnlocked,
@@ -27,10 +29,7 @@ export function ProductForm({
         <label>
           Categoria
           <select value={productForm.category} onChange={(event) => updateProductForm("category", event.target.value)}>
-            <option>Conjuntos</option>
-            <option>Camisetas</option>
-            <option>Selecciones</option>
-            <option>Clubes</option>
+            {categories.filter((category) => category !== "Todos").map((category) => <option key={category}>{category}</option>)}
           </select>
         </label>
         <label>

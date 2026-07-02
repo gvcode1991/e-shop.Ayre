@@ -1,6 +1,8 @@
 import React from "react";
 import { OrderList } from "../orders/OrderList";
 
+import { accountContent } from "../../config/storeConfig";
+
 export function AccountPanel({
   accountLookup,
   isRegisterRoute,
@@ -18,9 +20,9 @@ export function AccountPanel({
       <section className="account-section" id="cuenta">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Cuenta</p>
-            <h2>Crear cuenta</h2>
-            <p className="catalog-note">Registrate para recibir el email de activacion. Necesitas activar la cuenta antes de comprar.</p>
+            <p className="eyebrow">{accountContent.register.eyebrow}</p>
+            <h2>{accountContent.register.title}</h2>
+            <p className="catalog-note">{accountContent.register.note}</p>
           </div>
         </div>
         <div className="account-layout">
@@ -30,15 +32,15 @@ export function AccountPanel({
               <label>Email<input value={userForm.email} onChange={(event) => updateUserForm("email", event.target.value)} type="email" required /></label>
               <label>Telefono<input value={userForm.phone} onChange={(event) => updateUserForm("phone", event.target.value)} type="tel" /></label>
               <label>Contrasena<input value={userForm.password} onChange={(event) => updateUserForm("password", event.target.value)} type="password" minLength="8" required /></label>
-              <label className="checkbox-label"><input checked={userForm.acceptsMarketing} onChange={(event) => updateUserForm("acceptsMarketing", event.target.checked)} type="checkbox" /> Recibir novedades por email</label>
+              <label className="checkbox-label"><input checked={userForm.acceptsMarketing} onChange={(event) => updateUserForm("acceptsMarketing", event.target.checked)} type="checkbox" /> {accountContent.register.marketingLabel}</label>
             </div>
             {userStatus.message && <p className={`checkout-message ${userStatus.state}`}>{userStatus.message}</p>}
-            <button className="checkout-button" type="submit">Crear cuenta y enviar confirmacion</button>
+            <button className="checkout-button" type="submit">{accountContent.register.submitLabel}</button>
           </form>
           <div className="account-summary">
-            <h3>{userAccount ? userAccount.name : "Activacion por email"}</h3>
-            <p>{userAccount ? userAccount.email : "Despues de registrarte, abri el email de AyRe y confirma tu cuenta para habilitar compras."}</p>
-            <strong>{userAccount?.emailVerified ? "Cuenta activa" : "Pendiente de activacion"}</strong>
+            <h3>{userAccount ? userAccount.name : accountContent.register.pendingTitle}</h3>
+            <p>{userAccount ? userAccount.email : accountContent.register.pendingText}</p>
+            <strong>{userAccount?.emailVerified ? accountContent.register.activeStatus : accountContent.register.pendingStatus}</strong>
           </div>
         </div>
       </section>
@@ -49,27 +51,27 @@ export function AccountPanel({
     <section className="account-section" id="cuenta-admin">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">Mi cuenta</p>
-          <h2>Administracion de cuenta</h2>
-          <p className="catalog-note">Inicia sesion para consultar tus preferencias, favoritos y compras.</p>
+          <p className="eyebrow">{accountContent.account.eyebrow}</p>
+          <h2>{accountContent.account.title}</h2>
+          <p className="catalog-note">{accountContent.account.note}</p>
         </div>
       </div>
       <div className="account-layout">
         <form className="admin-form" onSubmit={loadAccount}>
-          <h3>Iniciar sesion</h3>
-          <label>Email registrado<input value={accountLookup.email} onChange={(event) => updateAccountLookup("email", event.target.value)} type="email" required /></label>
-          <label>Contrasena<input value={accountLookup.password} onChange={(event) => updateAccountLookup("password", event.target.value)} type="password" required /></label>
-          <button className="checkout-button" type="submit">Entrar</button>
+          <h3>{accountContent.account.loginTitle}</h3>
+          <label>{accountContent.account.emailLabel}<input value={accountLookup.email} onChange={(event) => updateAccountLookup("email", event.target.value)} type="email" required /></label>
+          <label>{accountContent.account.passwordLabel}<input value={accountLookup.password} onChange={(event) => updateAccountLookup("password", event.target.value)} type="password" required /></label>
+          <button className="checkout-button" type="submit">{accountContent.account.loginButton}</button>
           {userStatus.message && <p className={`checkout-message ${userStatus.state}`}>{userStatus.message}</p>}
         </form>
         <div className="account-summary">
-          <h3>{userAccount ? userAccount.email : "Cuenta"}</h3>
-          <p>{userAccount ? `Estado: ${userAccount.emailVerified ? "activa" : "pendiente de confirmacion"}` : "Ingresa con tu email y contrasena para ver tus compras y preferencias."}</p>
+          <h3>{userAccount ? userAccount.email : accountContent.account.emptyTitle}</h3>
+          <p>{userAccount ? `Estado: ${userAccount.emailVerified ? accountContent.account.activeState : accountContent.account.pendingState}` : accountContent.account.emptyText}</p>
           {userAccount && (
             <>
-              <label className="checkbox-label account-check"><input checked={Boolean(userAccount.acceptsMarketing)} onChange={(event) => saveAccountPreferences(event.target.checked)} type="checkbox" /> Recibir notificaciones al mail</label>
-              <strong>Favoritos: {(userAccount.favorites || []).length}</strong>
-              <strong>Compras realizadas: {(userAccount.purchases || []).length}</strong>
+              <label className="checkbox-label account-check"><input checked={Boolean(userAccount.acceptsMarketing)} onChange={(event) => saveAccountPreferences(event.target.checked)} type="checkbox" /> {accountContent.account.notificationsLabel}</label>
+              <strong>{accountContent.account.favoritesLabel}: {(userAccount.favorites || []).length}</strong>
+              <strong>{accountContent.account.purchasesLabel}: {(userAccount.purchases || []).length}</strong>
               <OrderList purchases={userAccount.purchases} />
             </>
           )}

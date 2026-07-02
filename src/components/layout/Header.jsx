@@ -3,13 +3,17 @@ import { Heart, Home, Menu, Search, ShoppingBag, UserRound } from "lucide-react"
 
 export function Header({
   cartQuantity,
+  headerActions,
   logoAyre,
+  mainNavLinks,
   navigateTo,
   navigateToSection,
   query,
+  searchPlaceholders,
   setCartOpen,
   setMenuOpen,
   setQuery,
+  storeInfo,
 }) {
   return (
     <header className="site-header">
@@ -18,32 +22,32 @@ export function Header({
           <Menu size={25} />
         </button>
 
-        <button className="mobile-search-button" type="button" aria-label="Buscar productos" onClick={() => navigateToSection("/", "productos")}>
+        <button className="mobile-search-button" type="button" aria-label={searchPlaceholders.mobile} onClick={() => navigateToSection("/", "productos")}>
           <Search size={21} />
         </button>
 
-        <a className="brand" href="/" aria-label="AyRe inicio" onClick={(event) => { event.preventDefault(); navigateTo("/"); }}>
+        <a className="brand" href="/" aria-label={`${storeInfo.name} inicio`} onClick={(event) => { event.preventDefault(); navigateTo("/"); }}>
           <img className="brand-mark" src={logoAyre} alt="" />
-          <span className="brand-name">AyRe</span>
+          <span className="brand-name">{storeInfo.name}</span>
         </a>
 
         <label className="header-search">
           <Search size={24} />
-          <input value={query} onChange={(event) => setQuery(event.target.value)} type="search" placeholder="Buscar camisetas, conjuntos, clubes..." />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} type="search" placeholder={searchPlaceholders.desktop} />
         </label>
 
         <div className="header-actions" aria-label="Accesos rapidos">
-          <a href="/cuenta" aria-label="Favoritos" onClick={(event) => { event.preventDefault(); navigateTo("/cuenta"); }}><Heart size={24} /><span>Favoritos</span></a>
-          <a href="/cuenta" aria-label="Mi cuenta" onClick={(event) => { event.preventDefault(); navigateTo("/cuenta"); }}><UserRound size={23} /><span>Mi cuenta</span></a>
-          <a href="#contacto" aria-label="Tiendas"><Home size={23} /><span>Tiendas</span></a>
+          <a href="/cuenta" aria-label={headerActions.favorites} onClick={(event) => { event.preventDefault(); navigateTo("/cuenta"); }}><Heart size={24} /><span>{headerActions.favorites}</span></a>
+          <a href="/cuenta" aria-label={headerActions.account} onClick={(event) => { event.preventDefault(); navigateTo("/cuenta"); }}><UserRound size={23} /><span>{headerActions.account}</span></a>
+          <a href="#contacto" aria-label={headerActions.stores}><Home size={23} /><span>{headerActions.stores}</span></a>
           <button className="header-cart" type="button" aria-label="Abrir carrito" onClick={() => setCartOpen(true)}>
             <ShoppingBag size={24} />
-            <span>Cesta</span>
+            <span>{headerActions.cart}</span>
             <strong>{cartQuantity}</strong>
           </button>
         </div>
 
-        <button className="mobile-account-button" type="button" aria-label="Mi cuenta" onClick={() => navigateTo("/cuenta")}>
+        <button className="mobile-account-button" type="button" aria-label={headerActions.account} onClick={() => navigateTo("/cuenta")}>
           <UserRound size={20} />
         </button>
 
@@ -54,12 +58,11 @@ export function Header({
       </div>
 
       <nav className="main-nav" aria-label="Secciones">
-        <a href="#productos">Coleccion</a>
-        <a href="#productos">Camisetas</a>
-        <a href="#productos">Conjuntos</a>
-        <a href="#coleccion">AyRe</a>
-        <a href="#contacto">Contacto</a>
-        <a href="/admin" target="_blank" rel="noreferrer">Admin</a>
+        {mainNavLinks.map((link) => (
+          <a href={link.href} target={link.external ? "_blank" : undefined} rel={link.external ? "noreferrer" : undefined} key={`${link.label}-${link.href}`}>
+            {link.label}
+          </a>
+        ))}
       </nav>
     </header>
   );
