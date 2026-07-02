@@ -1,4 +1,12 @@
+import { productFallbackImages } from "./images";
+
 export const appVersion = "1.6.0";
+
+export const storageKeys = {
+  cart: "ayre-cart",
+  userToken: "ayre-user-token",
+  adminToken: "ayre-admin-token",
+};
 
 export const storeInfo = {
   name: "AyRe",
@@ -165,3 +173,52 @@ export const footerContent = {
   contactTitle: "Contactanos",
   copyright: `Copyright ${storeInfo.legalName} - 2026. Todos los derechos reservados.`,
 };
+
+export const adminContent = {
+  panelEyebrow: "Gestion",
+  panelTitle: "Panel admin",
+  panelNote: "Alta, baja y modificacion de productos del catalogo.",
+  newProductButton: "Nuevo producto",
+  accessTitle: "Acceso admin",
+  emailLabel: "Email admin",
+  emailPlaceholder: `admin@${storeInfo.name.toLowerCase()}.com`,
+  passwordLabel: "Contrasena admin",
+  passwordPlaceholder: "Contrasena privada",
+  unlockButton: "Desbloquear panel",
+  product: {
+    tagsPlaceholder: "Producto destacado, Categoria, Marca",
+    imagePlaceholder: "URL de imagen principal",
+    galleryPlaceholder: "Una URL por linea. El panel las agrega automaticamente.",
+    uploadFormats: "JPG, PNG o WebP hasta 5 MB.",
+    uploadButton: "Subir imagen",
+    uploadLoading: "Subiendo...",
+    descriptionPlaceholder: "Descripcion corta para el catalogo",
+  },
+};
+
+export const fallbackProducts = [
+  { id: "set-boca-nino", name: "Set Boca nino", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Camiseta, short y medias para chicos.", price: 42900, image: productFallbackImages.setBocaNino, badge: "Club" },
+  { id: "conjunto-boca-azul", name: "Conjunto Boca azul", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Campera con capucha y pantalon deportivo.", price: 54900, image: productFallbackImages.conjuntoBocaAzul, badge: "Nuevo" },
+  { id: "set-river-nino", name: "Set River nino", category: "Conjuntos", tags: ["Clubes", "River"], description: "Kit completo con camiseta, short y medias.", price: 42900, image: productFallbackImages.setRiverNino, badge: "Club" },
+  { id: "conjunto-boca-blanco", name: "Conjunto Boca blanco", category: "Conjuntos", tags: ["Clubes", "Boca"], description: "Campera clara y pantalon con detalles.", price: 54900, image: productFallbackImages.conjuntoBocaBlanco, badge: "Invierno" },
+  { id: "set-racing-nino", name: "Set Racing nino", category: "Conjuntos", tags: ["Clubes", "Racing"], description: "Kit completo celeste, blanco y azul.", price: 42900, image: productFallbackImages.setRacingNino, badge: "Club" },
+  { id: "set-al-nassr-nino", name: "Set Al Nassr nino", category: "Conjuntos", tags: ["Clubes", "Al Nassr"], description: "Kit amarillo con short y medias.", price: 42900, image: productFallbackImages.setAlNassrNino, badge: "Global" },
+  { id: "camiseta-argentina-10", name: "Camiseta Argentina 10", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Modelo titular con detalles dorados.", price: 34900, image: productFallbackImages.camisetaArgentina10, badge: "Seleccion" },
+  { id: "camiseta-argentina-negra", name: "Camiseta Argentina negra", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Modelo alternativo con graficas azules.", price: 34900, image: productFallbackImages.camisetaArgentinaNegra, badge: "Seleccion" },
+  { id: "camiseta-argentina-stock", name: "Camiseta Argentina stock", category: "Camisetas", tags: ["Selecciones", "Argentina"], description: "Pack disponible con etiqueta.", price: 34900, image: productFallbackImages.camisetaArgentinaStock, badge: "Stock" },
+  { id: "camiseta-portugal-7", name: "Camiseta Portugal 7", category: "Camisetas", tags: ["Selecciones", "Portugal"], description: "Modelo rojo con detalles verdes.", price: 34900, image: productFallbackImages.camisetaPortugal7, badge: "Seleccion" },
+  { id: "reloj-negro", name: "Reloj negro", category: "Accesorios", tags: ["Relojes"], description: "Reloj negro para completar tu look diario.", price: 29900, image: productFallbackImages.relojNegro, badge: "Accesorio" },
+  { id: "reloj-gold", name: "Reloj gold", category: "Accesorios", tags: ["Relojes"], description: "Reloj dorado con terminacion elegante.", price: 29900, image: productFallbackImages.relojGold1, images: [productFallbackImages.relojGold1, productFallbackImages.relojGold2, productFallbackImages.relojGold3], badge: "Accesorio" },
+  { id: "reloj-silver", name: "Reloj silver", category: "Accesorios", tags: ["Relojes"], description: "Reloj plateado versatil para todos los dias.", price: 29900, image: productFallbackImages.relojSilver1, images: [productFallbackImages.relojSilver1, productFallbackImages.relojSilver2], badge: "Accesorio" },
+].map((product) => ({
+  ...product,
+  images: product.images || [product.image],
+  stock: [
+    { size: "8", quantity: 4 },
+    { size: "10", quantity: 4 },
+    { size: "12", quantity: 4 },
+    { size: "S", quantity: 3 },
+    { size: "M", quantity: 3 },
+  ],
+  colors: [],
+}));

@@ -1,8 +1,10 @@
+import { storeInfo } from "./storeConfig";
+
 export const mainNavLinks = [
   { label: "Coleccion", href: "#productos" },
   { label: "Camisetas", href: "#productos" },
   { label: "Conjuntos", href: "#productos" },
-  { label: "AyRe", href: "#coleccion" },
+  { label: storeInfo.name, href: "#coleccion" },
   { label: "Contacto", href: "#contacto" },
   { label: "Admin", href: "/admin", external: true },
 ];

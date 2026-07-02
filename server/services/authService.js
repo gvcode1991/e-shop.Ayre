@@ -1,9 +1,11 @@
 import crypto from "node:crypto";
 
+import { getDefaultAppSecret } from "../config/storeConfig.js";
+
 const tokenTtlMs = 1000 * 60 * 60 * 24 * 7;
 
 function getSecret() {
-  return process.env.APP_SECRET || process.env.ADMIN_API_KEY || "ayre-dev-secret-change-me";
+  return process.env.APP_SECRET || process.env.ADMIN_API_KEY || getDefaultAppSecret();
 }
 
 function base64UrlEncode(value) {

@@ -1,16 +1,18 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import { storageKeys } from "../config/storeConfig";
+
 const AdminContext = createContext(null);
 
 export function AdminProvider({ children }) {
   const [adminLogin, setAdminLogin] = useState({ email: "", password: "" });
-  const [adminToken, setAdminToken] = useState(() => sessionStorage.getItem("ayre-admin-token") || "");
+  const [adminToken, setAdminToken] = useState(() => sessionStorage.getItem(storageKeys.adminToken) || "");
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [adminStatus, setAdminStatus] = useState({ state: "idle", message: "" });
 
   useEffect(() => {
-    if (adminToken) sessionStorage.setItem("ayre-admin-token", adminToken);
-    else sessionStorage.removeItem("ayre-admin-token");
+    if (adminToken) sessionStorage.setItem(storageKeys.adminToken, adminToken);
+    else sessionStorage.removeItem(storageKeys.adminToken);
   }, [adminToken]);
 
   function adminHeaders(extraHeaders = {}) {

@@ -1,3 +1,5 @@
+import { getStoreName } from "../config/storeConfig.js";
+
 export function notifyAdminOrder(order) {
   const message = buildOrderPreparationMessage(order);
 
@@ -14,7 +16,7 @@ export function buildOrderPreparationMessage(order) {
   }
 
   const lines = [
-    `Nuevo pedido AyRe: ${order.id}`,
+    `Nuevo pedido ${getStoreName()}: ${order.id}`,
     `Cliente: ${order.customer?.name || ""}`,
     `Telefono: ${order.customer?.phone || ""}`,
     `Email: ${order.customer?.email || ""}`,

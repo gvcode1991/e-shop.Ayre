@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
+import { storageKeys } from "../config/storeConfig";
+
 const emptyUserForm = {
   name: "",
   email: "",
@@ -19,12 +21,12 @@ export function UserProvider({ children }) {
   const [userForm, setUserForm] = useState(emptyUserForm);
   const [accountLookup, setAccountLookup] = useState(emptyAccountLookup);
   const [userAccount, setUserAccount] = useState(null);
-  const [userToken, setUserToken] = useState(() => localStorage.getItem("ayre-user-token") || "");
+  const [userToken, setUserToken] = useState(() => localStorage.getItem(storageKeys.userToken) || "");
   const [userStatus, setUserStatus] = useState({ state: "idle", message: "" });
 
   useEffect(() => {
-    if (userToken) localStorage.setItem("ayre-user-token", userToken);
-    else localStorage.removeItem("ayre-user-token");
+    if (userToken) localStorage.setItem(storageKeys.userToken, userToken);
+    else localStorage.removeItem(storageKeys.userToken);
   }, [userToken]);
 
   function updateUserForm(field, value) {

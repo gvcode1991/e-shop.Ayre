@@ -1,6 +1,6 @@
-# AyRe e-shop
+# E-commerce template
 
-Tienda online para AyRe, desarrollada con React y Express. El proyecto combina un frontend responsive con catalogo, carrito, checkout y panel de administracion, mas una API conectada a MongoDB Atlas para productos, usuarios y pedidos.
+Base profesional reutilizable para crear tiendas online con React y Express. La configuracion por defecto corresponde a AyRe, pero la marca, textos, navegacion, imagenes, colores y variables sensibles estan centralizadas para adaptar el proyecto a otra tienda sin tocar los componentes principales.
 
 ## Caracteristicas
 
@@ -12,7 +12,7 @@ Tienda online para AyRe, desarrollada con React y Express. El proyecto combina u
 - Subida de imagenes de productos a Cloudinary desde el panel admin.
 - Emails transaccionales preparados con Resend.
 - Frontend responsive para mobile y desktop.
-- Configuracion centralizada de marca, navegacion, imagenes y textos para usar AyRe como base reutilizable.
+- Configuracion centralizada de marca, navegacion, imagenes y textos para reutilizar la base en nuevas tiendas.
 
 ## Stack
 
@@ -66,8 +66,16 @@ Usar `.env.example` como referencia para completar las variables necesarias:
 - URLs publicas de frontend/API
 - WhatsApp de administracion
 
+Los principales archivos para adaptar la tienda son:
+
+- `src/config/storeConfig.js`
+- `src/config/themeConfig.js`
+- `src/config/navigation.js`
+- `src/config/images.js`
+- `.env`
+
 ## Version
 
 Version actual: `1.6.0`.
 
-Esta version consolida la estructura del frontend en contextos y hooks reutilizables para productos, admin, imagenes, checkout y usuarios, manteniendo la funcionalidad existente.
+Esta version consolida la estructura del frontend en contextos y hooks reutilizables para productos, admin, imagenes, checkout y usuarios, y avanza en la preparacion del proyecto como template configurable.

@@ -1,6 +1,7 @@
 import React from "react";
 import { AdminProductsList } from "./AdminProductsList";
 import { ProductForm } from "./ProductForm";
+import { adminContent } from "../../config/storeConfig";
 
 export function AdminPanel({
   adminLogin,
@@ -24,25 +25,25 @@ export function AdminPanel({
     <section className="admin-section" id="admin">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">Gestion</p>
-          <h2>Panel admin</h2>
-          <p className="catalog-note">Alta, baja y modificacion de productos del catalogo.</p>
+          <p className="eyebrow">{adminContent.panelEyebrow}</p>
+          <h2>{adminContent.panelTitle}</h2>
+          <p className="catalog-note">{adminContent.panelNote}</p>
         </div>
-        <button className="secondary-admin-button" type="button" onClick={resetProductForm}>Nuevo producto</button>
+        <button className="secondary-admin-button" type="button" onClick={resetProductForm}>{adminContent.newProductButton}</button>
       </div>
 
       <form className="admin-form admin-unlock" onSubmit={unlockAdmin}>
-        <h3>Acceso admin</h3>
+        <h3>{adminContent.accessTitle}</h3>
         <label>
-          Email admin
-          <input value={adminLogin.email} onChange={(event) => updateAdminLogin("email", event.target.value)} type="email" placeholder="admin@ayre.com.ar" />
+          {adminContent.emailLabel}
+          <input value={adminLogin.email} onChange={(event) => updateAdminLogin("email", event.target.value)} type="email" placeholder={adminContent.emailPlaceholder} />
         </label>
         <label>
-          Contrasena admin
-          <input value={adminLogin.password} onChange={(event) => updateAdminLogin("password", event.target.value)} type="password" placeholder="Contrasena privada" />
+          {adminContent.passwordLabel}
+          <input value={adminLogin.password} onChange={(event) => updateAdminLogin("password", event.target.value)} type="password" placeholder={adminContent.passwordPlaceholder} />
         </label>
         {adminStatus.message && <p className={`checkout-message ${adminStatus.state}`}>{adminStatus.message}</p>}
-        <button className="secondary-admin-button" type="submit">Desbloquear panel</button>
+        <button className="secondary-admin-button" type="submit">{adminContent.unlockButton}</button>
       </form>
 
       <div className="admin-layout">
