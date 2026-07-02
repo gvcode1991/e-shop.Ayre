@@ -1,4 +1,4 @@
-export const appVersion = "1.5.5";
+export const appVersion = "1.6.0";
 
 export const storeInfo = {
   name: "AyRe",
